@@ -4,14 +4,16 @@
 
 | Path | Contents |
 |---|---|
-| `training/` | `3DCNN.ipynb` — model architecture + training code |
+| `training/` | `model.py` (3D CNN architecture), `dataset.py` + `train.py` (Week 4), `evaluate.py` (Week 5) |
 | `model/` | `model_weights.h5` (trained), `face_weights.dat` (dlib 68-point predictor) |
 | `outputs/` | training history graphs, confusion matrix, per-class accuracy, logs |
 
 ## Responsibilities
 
 1. Finalize requirements + workflow — [PRD.md](../PRD.md), [docs/workflow.md](../docs/workflow.md). *(done)*
-2. Design the 3D CNN (Conv3D -> Pool3D -> Conv3D -> Pool3D -> Flatten -> Dense -> Dropout -> Softmax).
+2. Design the 3D CNN — `training/model.py`. *(done)* 3× (Conv3D → BN → Pool3D) →
+   GlobalAveragePooling3D → Dense → Dropout → Softmax. Uses global average pooling
+   instead of Flatten so the model stays well under the 100 MB PRD limit.
 3. Training pipeline: train/val split, categorical crossentropy, Adam, accuracy metric,
    ModelCheckpoint on best val_accuracy, save training history.
 4. Evaluation: confusion matrix + per-class accuracy saved in `outputs/`.
