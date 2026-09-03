@@ -1,6 +1,6 @@
 export default function Header() {
   return (
-    <header className="flex items-baseline justify-between border-b border-line px-5 py-4">
+    <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-line px-5 py-4">
       <div className="flex items-baseline gap-3">
         <span className="text-xl font-bold tracking-tight text-white">LipSense</span>
         <span className="hidden text-sm text-slate-400 sm:inline">

@@ -41,4 +41,4 @@ uvicorn main:app --reload --port 8000
 
 - [x] **Week 5** — FastAPI app, `/health`, `/vocab`, `WS /ws/predict`, stub fallback
 - [x] **Week 6** — frontend WebSocket client wired; end-to-end tested with the stub
-- [ ] **Week 8** — swap stub for the trained model, reconnect handling
+- [x] **Week 8** — model auto-loads when trained (no code change); client auto-reconnects

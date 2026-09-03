@@ -2,7 +2,7 @@ import { CONFIDENCE_THRESHOLD } from '../constants.js'
 
 // Big predicted word + confidence bar. Below the threshold we show
 // "Prediction uncertain" and keep the top guess small (DESIGN.md rule).
-export default function PredictionCard({ prediction }) {
+export default function PredictionCard({ prediction, predicting = false }) {
   const pct = prediction ? Math.round(prediction.confidence * 100) : 0
   const uncertain = prediction && prediction.confidence < CONFIDENCE_THRESHOLD
 
@@ -12,7 +12,9 @@ export default function PredictionCard({ prediction }) {
         Prediction
       </p>
 
-      {!prediction ? (
+      {predicting ? (
+        <p className="animate-pulse text-2xl font-semibold text-slate-400">predicting…</p>
+      ) : !prediction ? (
         <p className="text-2xl font-semibold text-slate-600">—</p>
       ) : uncertain ? (
         <div>

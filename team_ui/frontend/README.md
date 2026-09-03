@@ -43,8 +43,8 @@ npm run preview     # serve the built app
 - [x] **Week 4** — calibration + speaking detection + 22-frame sequence buffer + `sequenceToTensor`
 - [x] **Week 5** — backend built (`team_ui/backend/`, FastAPI + WS, stub predictor)
 - [x] **Week 6** — WebSocket client wired: utterance → `/ws/predict` → word + confidence + history
-- [ ] **Week 7** — standalone `demo/`, dataset build tools
-- [ ] **Week 8** — real model swap, reconnect, mobile, polish
+- [x] **Week 7** — standalone `demo/predict_live.py` + `validate_model.py` + `build_dataset.py`
+- [x] **Week 8** — auto-reconnect, "predicting…" state, mobile tweaks, preprocessing-parity doc
 
 The frame sequence sent to the backend must match the contract in
 [PRD.md § 7](../../PRD.md) / `team_video_processing/preprocessing/preprocess.py`:

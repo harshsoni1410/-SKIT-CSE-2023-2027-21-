@@ -16,6 +16,9 @@ export class PredictClient {
     this.ws = null
     this._pending = null
     this._open = false
+    this._wantOpen = false // true between connect() and disconnect() - drives auto-reconnect
+    this._retry = 0
+    this._retryTimer = null
   }
 
   get connected() {
@@ -23,6 +26,7 @@ export class PredictClient {
   }
 
   connect() {
+    this._wantOpen = true
     if (this.ws && (this.ws.readyState === WebSocket.CONNECTING || this.ws.readyState === WebSocket.OPEN)) {
       return
     }
@@ -33,18 +37,25 @@ export class PredictClient {
       ws = new WebSocket(this.url)
     } catch {
       this.onStatus?.('error')
+      this._scheduleReconnect()
       return
     }
     this.ws = ws
 
     ws.onopen = () => {
       this._open = true
+      this._retry = 0
       this.onStatus?.('open')
     }
     ws.onclose = () => {
       this._open = false
-      this.onStatus?.('closed')
       this._reject('connection closed')
+      if (this._wantOpen) {
+        this.onStatus?.('connecting')
+        this._scheduleReconnect()
+      } else {
+        this.onStatus?.('closed')
+      }
     }
     ws.onerror = () => {
       this.onStatus?.('error')
@@ -66,7 +77,23 @@ export class PredictClient {
     }
   }
 
+  _scheduleReconnect() {
+    if (!this._wantOpen || this._retryTimer) return
+    const delay = Math.min(1000 * 2 ** this._retry, 10000) // 1s,2s,4s,8s,10s…
+    this._retry += 1
+    this._retryTimer = setTimeout(() => {
+      this._retryTimer = null
+      if (this._wantOpen) this.connect()
+    }, delay)
+  }
+
   disconnect() {
+    this._wantOpen = false
+    if (this._retryTimer) {
+      clearTimeout(this._retryTimer)
+      this._retryTimer = null
+    }
+    this._retry = 0
     if (this.ws) {
       this.ws.onclose = null
       this.ws.onerror = null
@@ -79,6 +106,7 @@ export class PredictClient {
     }
     this._open = false
     this._reject('disconnected')
+    this.onStatus?.('closed')
   }
 
   /**

@@ -18,6 +18,7 @@ import { HISTORY_LIMIT } from './constants.js'
 export default function App() {
   const [cameraOn, setCameraOn] = useState(false)
   const [prediction, setPrediction] = useState(null)
+  const [predicting, setPredicting] = useState(false)
   const [history, setHistory] = useState([])
   const [error, setError] = useState(null)
 
@@ -26,6 +27,7 @@ export default function App() {
   const handleUtterance = useCallback(
     async (sequence) => {
       const tensor = sequenceToTensor(sequence)
+      setPredicting(true)
       try {
         const res = await predictClient.predict(tensor)
         setPrediction({ word: res.word, confidence: res.confidence })
@@ -40,6 +42,7 @@ export default function App() {
             : `Prediction failed: ${err.message}`,
         )
       } finally {
+        setPredicting(false)
         speech.ready()
       }
     },
@@ -77,9 +80,9 @@ export default function App() {
     <div className="mx-auto flex min-h-full max-w-5xl flex-col">
       <Header />
 
-      <main className="flex flex-1 flex-col gap-4 p-5 lg:flex-row">
+      <main className="flex flex-1 flex-col gap-4 p-4 sm:p-5 lg:flex-row">
         {/* Left column - webcam + controls */}
-        <section className="flex flex-col gap-3 lg:w-3/5">
+        <section className="flex min-w-0 flex-col gap-3 lg:w-3/5">
           <WebcamView
             cameraOn={cameraOn}
             onReady={() => {}}
@@ -100,12 +103,12 @@ export default function App() {
         </section>
 
         {/* Right column - status, prediction, history */}
-        <aside className="flex flex-col gap-4 lg:w-2/5">
+        <aside className="flex min-w-0 flex-col gap-4 lg:w-2/5">
           <div className="card p-4">
             <StatusBadge status={status} />
           </div>
           <div className="card p-4">
-            <PredictionCard prediction={prediction} />
+            <PredictionCard prediction={prediction} predicting={predicting} />
           </div>
           <div className="card p-4">
             <HistoryList history={history} />
