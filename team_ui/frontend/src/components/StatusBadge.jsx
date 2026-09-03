@@ -2,6 +2,7 @@
 // ("idle" | "not_talking" | "recording" | "processing") from DESIGN.md.
 const STATUS_MAP = {
   idle: { label: 'CAMERA OFF', dot: 'bg-slate-500', text: 'text-slate-400' },
+  calibrating: { label: 'CALIBRATING — KEEP MOUTH CLOSED', dot: 'bg-sky-400 animate-pulse', text: 'text-sky-300' },
   not_talking: { label: 'NOT TALKING', dot: 'bg-slate-400', text: 'text-slate-300' },
   recording: { label: 'RECORDING', dot: 'bg-rose-500 animate-pulse', text: 'text-rose-300' },
   processing: { label: 'PROCESSING', dot: 'bg-amber-400 animate-pulse', text: 'text-amber-300' },
