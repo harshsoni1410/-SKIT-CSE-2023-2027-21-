@@ -48,9 +48,15 @@ covering the video-processing and UI modules in the meantime; work is tracked ag
   (confusion matrix + per-class accuracy + `metrics.json` via sklearn). Eval pipeline
   smoke-tested with `--synthetic`.
 
+- **UI (Week 6)** — `src/lib/predictClient.js` + `src/hooks/usePredictClient.js`: connects
+  to the backend while the camera is on, sends the `sequenceToTensor` output on each
+  utterance, shows `{word, confidence}` + a history entry, `<0.6` → "Prediction uncertain".
+  `ConnectionBadge` shows backend state + stub/model. `mockData.js` removed; app starts
+  empty. End-to-end tested against the stub backend (utterance → word).
+
 **Next:**
-- **Week 6** — UI: WebSocket client, send the 22-frame sequence to `/ws/predict`,
-  show `{word, confidence}` + history, `<0.6` → "Prediction uncertain". Remove `mockData.js`.
+- **Week 7** — `demo/predict_live.py` (standalone webcam demo) + `demo/validate_model.py`;
+  `team_video_processing/data_collection/build_dataset.py` (raw recordings → `.npy` + `class_names.json`).
 
 **Blockers:** none. (Risk: OneDrive keeps corrupting `venv/` — plan to move the project
 off OneDrive.)
