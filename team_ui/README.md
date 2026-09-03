@@ -44,4 +44,13 @@ utterance completes.
 
 ## Setup
 
-React + Vite + Tailwind scaffold is added later (needs Node.js LTS).
+Frontend is scaffolded (React + Vite + Tailwind, needs Node.js LTS):
+
+```
+cd team_ui/frontend
+npm install
+npm run dev
+```
+
+See [frontend/README.md](frontend/README.md) for the weekly build status.
+Backend (FastAPI + WebSocket) is added around Week 5.
