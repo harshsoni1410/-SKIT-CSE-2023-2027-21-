@@ -6,6 +6,8 @@
 |---|---|
 | `data_collection/` | `collect.py` — record lip-region frame sequences from the webcam |
 | `preprocessing/` | `preprocess.py` — the shared preprocessing function (everyone imports this) |
+| `face_detection/` | `detector.py` — reusable dlib face + 68-landmark detection (`FaceLandmarkDetector`) |
+| `augment.py` | training-only augmentation: flip, brightness/contrast jitter, small shift |
 | `dataset/` | word-wise data: `dataset/<word>/<sample_id>.npy` |
 
 ## Dataset structure
