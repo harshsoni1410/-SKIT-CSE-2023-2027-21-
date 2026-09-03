@@ -5,6 +5,8 @@ import io
 import os
 import sys
 import html
+import matplotlib
+matplotlib.use("Agg")  # headless: no display on CI runners
 import matplotlib.pyplot as plt
 
 from reportlab.lib.pagesizes import letter

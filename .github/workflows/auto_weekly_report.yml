@@ -36,8 +36,17 @@ jobs:
 
       - name: Move PDF to Weekly Reports Directory & Commit to Repository
         run: |
+          set -e
           mkdir -p weekly_reports
-          mv *_Weekly_Progress_Report_Form-3_*.pdf weekly_reports/
+          # repo name starts with "-", so glob results can look like options: guard with ./ and --
+          shopt -s nullglob
+          pdfs=(./*_Weekly_Progress_Report_Form-3_*.pdf)
+          if [ ${#pdfs[@]} -eq 0 ]; then
+            echo "::error::No report PDF was generated"
+            ls -la
+            exit 1
+          fi
+          mv -- "${pdfs[@]}" weekly_reports/
 
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
