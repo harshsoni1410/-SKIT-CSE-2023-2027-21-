@@ -54,9 +54,23 @@ covering the video-processing and UI modules in the meantime; work is tracked ag
   `ConnectionBadge` shows backend state + stub/model. `mockData.js` removed; app starts
   empty. End-to-end tested against the stub backend (utterance → word).
 
+- **Demo (Week 7)** — `demo/predict_live.py` (standalone webcam → 3D CNN → word on screen,
+  reuses the shared detector + preprocess + `LipReader`), `demo/validate_model.py`
+  (accuracy + per-class + text confusion matrix, `--min-accuracy` gate). Video:
+  `data_collection/build_dataset.py` (recorded clips → `.npy` + `class_names.json`).
+  Tested end to end with a fake dataset: build → train → validate → confusion matrix.
+- **Polish (Week 8)** — WebSocket client auto-reconnects with backoff; "predicting…"
+  state on the card; mobile layout tweaks (min-w-0, header wrap, smaller padding);
+  `docs/preprocessing-parity.md` documents browser vs Python frame parity; backend
+  swaps stub → trained model automatically when `model_weights.h5` appears (verified).
+  Root `README.md` now has full run instructions.
+
+**Status:** Weeks 1–8 of the build roadmap complete. Web demo + standalone demo + training
++ evaluation all run. Remaining real-world work: record an actual dataset, train, tune.
+
 **Next:**
-- **Week 7** — `demo/predict_live.py` (standalone webcam demo) + `demo/validate_model.py`;
-  `team_video_processing/data_collection/build_dataset.py` (raw recordings → `.npy` + `class_names.json`).
+- Record a balanced dataset (`collect.py` / `build_dataset.py`), lock the vocabulary,
+  train (`train.py`), validate (`validate_model.py`), then demo with the real model.
 
 **Blockers:** none. (Risk: OneDrive keeps corrupting `venv/` — plan to move the project
 off OneDrive.)

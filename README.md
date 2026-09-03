@@ -28,6 +28,27 @@ Plan: [docs/team_plan.md](docs/team_plan.md) · Requirements: [PRD.md](PRD.md) �
 ## Tech stack
 
 - **AI/ML:** Python 3.10, TensorFlow/Keras, 3D CNN, NumPy, scikit-learn
-- **Computer Vision:** OpenCV, dlib (68-point facial landmarks)
+- **Computer Vision:** OpenCV, dlib (68-point landmarks), MediaPipe FaceLandmarker (browser)
 - **Backend:** FastAPI + WebSocket
 - **Frontend:** React + Vite + Tailwind CSS
+
+## Run
+
+```
+python -m venv venv && venv\Scripts\activate && pip install -r requirements.txt
+
+# 1. web demo — backend + frontend (two terminals)
+cd team_ui/backend  && uvicorn main:app --port 8000
+cd team_ui/frontend && npm install && npm run dev        # http://localhost:5173
+
+# 2. standalone webcam demo (no browser)
+python demo/predict_live.py
+
+# 3. train / evaluate (needs a dataset in team_video_processing/dataset/)
+python -m team_ai_model.training.train --epochs 40
+python demo/validate_model.py
+```
+
+Before a model is trained the backend serves a **stub predictor** (random word) so the
+full pipeline still runs. Build progress: [PROGRESS.md](PROGRESS.md),
+[docs/build-roadmap.md](docs/build-roadmap.md).

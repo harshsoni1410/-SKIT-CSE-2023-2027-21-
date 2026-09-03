@@ -4,7 +4,7 @@
 
 | Path | Contents |
 |---|---|
-| `training/` | `model.py` (3D CNN architecture), `dataset.py` + `train.py` (Week 4), `evaluate.py` (Week 5) |
+| `training/` | `model.py` (3D CNN), `dataset.py` + `train.py` (data + training), `evaluate.py` (metrics), `predict.py` (`LipReader` — model → word) |
 | `model/` | `model_weights.h5` (trained), `face_weights.dat` (dlib 68-point predictor) |
 | `outputs/` | training history graphs, confusion matrix, per-class accuracy, logs |
 
