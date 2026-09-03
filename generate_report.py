@@ -17,7 +17,16 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 # -------------------------------------------------------------
 COLLEGE_NAME = "Swami Keshvanand Institute of Technology, Management & Gramothan, Jaipur"
 DEPARTMENT_NAME = "Department of Computer Science & Engineering"
+
+# Monday of project Week 1. Week number = weeks elapsed since this date + 1.
+PROJECT_WEEK1_MONDAY = datetime.date(2026, 8, 31)
 # -------------------------------------------------------------
+
+
+def get_week_number(on_date=None):
+    """Return the project week number (1-based) for a given date."""
+    on_date = on_date or datetime.date.today()
+    return max(1, ((on_date - PROJECT_WEEK1_MONDAY).days // 7) + 1)
 
 
 def get_repo_info():
@@ -170,9 +179,10 @@ def generate_pdf(interval="weekly"):
 
     date_stamp = datetime.date.today().strftime("%Y-%m-%d")
 
+    week_num = get_week_number()
     if interval == "weekly":
-        report_title = "Weekly Progress Report (Form-3)"
-        doc_name = f"{repo_name}_Weekly_Progress_Report_Form-3_{date_stamp}.pdf"
+        report_title = f"Weekly Progress Report (Form-3) - Week {week_num}"
+        doc_name = f"{repo_name}_Week-{week_num:02d}_Weekly_Progress_Report_Form-3_{date_stamp}.pdf"
     elif interval == "monthly":
         report_title = "Monthly Progress Report (Form-3)"
         doc_name = f"{repo_name}_Monthly_Progress_Report_Form-3_{date_stamp}.pdf"

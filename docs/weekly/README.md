@@ -22,7 +22,9 @@ python generate_report.py final           # whole project
 ```
 
 The PDF is written to the repo root (git-ignored there); the workflow moves it into
-`weekly_reports/`.
+`weekly_reports/`. The filename carries the project week number, e.g.
+`..._Week-01_Weekly_Progress_Report_Form-3_2026-09-03.pdf` (Week 1 anchor Monday =
+2026-08-31, set in `generate_report.py`).
 
 ## One-time GitHub setup
 
