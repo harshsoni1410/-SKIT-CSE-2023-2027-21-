@@ -4,7 +4,7 @@
 
 ---
 
-## TEAM LEAD — Harsh Soni
+## Harsh Soni (Team Lead) — AI Model
 ### Sprint: AI Model Development — folder: [`team_ai_model/`](../team_ai_model/)
 
 | # | User Story | Start | End | Details |
@@ -19,7 +19,7 @@
 
 ---
 
-## MEMBER 1 — Video Processing
+## Dhruv Sharma — Video Processing
 ### Sprint: Video Processing & Data Preparation — folder: [`team_video_processing/`](../team_video_processing/)
 
 | # | User Story | Start | End | Details |
@@ -34,7 +34,7 @@
 
 ---
 
-## MEMBER 2 — UI Development
+## Dipesh Yadav — UI Development
 ### Sprint: UI Integration & Development — folder: [`team_ui/`](../team_ui/)
 
 | # | User Story | Start | End | Details |
@@ -54,8 +54,8 @@
 | Member | Task | Deliverable |
 |---|---|---|
 | Harsh (Lead) | Project planning & requirements | [PRD.md](../PRD.md) + [workflow.md](workflow.md) |
-| Member 1 | Collect video dataset | `team_video_processing/data_collection/collect.py` |
-| Member 2 | Design user interface | `team_ui/frontend/DESIGN.md` |
+| Dhruv Sharma | Collect video dataset | `team_video_processing/data_collection/collect.py` |
+| Dipesh Yadav | Design user interface | `team_ui/frontend/DESIGN.md` |
 
 ## Shared rules
 

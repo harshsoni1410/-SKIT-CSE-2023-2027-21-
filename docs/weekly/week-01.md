@@ -7,8 +7,8 @@
 | Member | Sprint task | Deliverable |
 |---|---|---|
 | Harsh Soni (Lead) | Project planning & requirements | `PRD.md`, `docs/workflow.md` |
-| Member 1 | Collect video dataset | `team_video_processing/data_collection/collect.py` |
-| Member 2 | Design user interface | `team_ui/frontend/DESIGN.md` |
+| Dhruv Sharma | Collect video dataset | `team_video_processing/data_collection/collect.py` |
+| Dipesh Yadav | Design user interface | `team_ui/frontend/DESIGN.md` |
 
 ## Done
 
@@ -20,7 +20,7 @@
 - Set up repo structure, `requirements.txt` (Python 3.10), `.gitignore`.
 - Set up the weekly Form-3 report tooling (`generate_report.py` + GitHub Actions).
 
-### Member 1 — data collection tool
+### Dhruv Sharma — data collection tool
 - Wrote `team_video_processing/data_collection/collect.py`: webcam capture,
   dlib face + 68-landmark detection, lip ROI crop, automatic utterance detection
   (calibrated inner-lip-distance threshold), saves each sample as
@@ -28,7 +28,7 @@
 - Wrote the shared `team_video_processing/preprocessing/preprocess.py` used by
   collection, training and the live demo (one preprocessing path everywhere).
 
-### Member 2 — UI design
+### Dipesh Yadav — UI design
 - Wrote `team_ui/frontend/DESIGN.md`: layout wireframe, component list, app state
   shape, visual style, and the low-confidence display rule.
 
@@ -39,6 +39,6 @@
 - `preprocess.py` self-test passes → tensor shape `(1, 22, 80, 112, 3)`.
 
 ## Next week (Week 2)
-- Member 1: video preprocessing — turn raw recordings into clean input frames, test `collect.py` end to end and record a first small batch.
+- Dhruv Sharma: video preprocessing — turn raw recordings into clean input frames, test `collect.py` end to end and record a first small batch.
 - Lead: dataset planning — vocabulary lock, samples-per-word target, augmentation plan.
-- Member 2: scaffold the React + Vite + Tailwind project and build the static layout.
+- Dipesh Yadav: scaffold the React + Vite + Tailwind project and build the static layout.

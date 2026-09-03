@@ -14,15 +14,15 @@ Updated weekly. Newest entry on top.
 - Downloaded dlib 68-point landmark model -> `team_ai_model/model/face_weights.dat`.
 - `preprocessing/preprocess.py` self-test passes: tensor shape (1, 22, 80, 112, 3).
 - **Lead first task** — `PRD.md` + `docs/workflow.md` (requirements + overall workflow).
-- **Member 1 first task** — `team_video_processing/data_collection/collect.py` (collect video dataset).
-- **Member 2 first task** — `team_ui/frontend/DESIGN.md` (basic UI design).
+- **Dhruv Sharma first task** — `team_video_processing/data_collection/collect.py` (collect video dataset).
+- **Dipesh Yadav first task** — `team_ui/frontend/DESIGN.md` (basic UI design).
 - Set up weekly Form-3 report tooling: `generate_report.py` + `.github/workflows/auto_weekly_report.yml`.
 - Weekly logs now live in `docs/weekly/` — see [week-01.md](docs/weekly/week-01.md).
 
 **Next sprint tasks:**
 - Lead: dataset planning.
-- Member 1: video preprocessing.
-- Member 2: video upload interface (React + Vite + Tailwind scaffold).
+- Dhruv Sharma: video preprocessing.
+- Dipesh Yadav: video upload interface (React + Vite + Tailwind scaffold).
 
 **Blockers:** none.
 
@@ -33,5 +33,5 @@ Updated weekly. Newest entry on top.
 | Member | Sprint | First task | File |
 |---|---|---|---|
 | Harsh Soni (Lead) | AI Model Development | Project planning & requirements | `PRD.md`, `docs/workflow.md` |
-| Member 1 | Video Processing & Data Preparation | Collect video dataset | `team_video_processing/data_collection/collect.py` |
-| Member 2 | UI Integration & Development | Design user interface | `team_ui/frontend/DESIGN.md` |
+| Dhruv Sharma | Video Processing & Data Preparation | Collect video dataset | `team_video_processing/data_collection/collect.py` |
+| Dipesh Yadav | UI Integration & Development | Design user interface | `team_ui/frontend/DESIGN.md` |

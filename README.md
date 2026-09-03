@@ -19,8 +19,8 @@ Details: [docs/workflow.md](docs/workflow.md)
 | Folder | Owner | Sprint |
 |---|---|---|
 | [team_ai_model/](team_ai_model/) | Harsh Soni (Team Lead) | AI Model Development |
-| [team_video_processing/](team_video_processing/) | Member 1 | Video Processing & Data Preparation |
-| [team_ui/](team_ui/) | Member 2 | UI Integration & Development |
+| [team_video_processing/](team_video_processing/) | Dhruv Sharma | Video Processing & Data Preparation |
+| [team_ui/](team_ui/) | Dipesh Yadav | UI Integration & Development |
 | [demo/](demo/) | Whole team | Real-time prediction (integration) |
 
 Plan: [docs/team_plan.md](docs/team_plan.md) · Requirements: [PRD.md](PRD.md) · Progress: [PROGRESS.md](PROGRESS.md) · Weekly: [docs/weekly/](docs/weekly/)
