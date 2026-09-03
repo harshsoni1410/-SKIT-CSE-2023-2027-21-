@@ -6,10 +6,17 @@ training pipeline."
 
 Usage:
     # real data (once team_video_processing/dataset/ has samples)
-    python team_ai_model/training/train.py --epochs 40 --batch 8
+    python -m team_ai_model.training.train --epochs 60 --batch 8
+
+    # more augmentation for a very small dataset
+    python -m team_ai_model.training.train --epochs 80 --augment-factor 5
 
     # pipeline smoke test, no dataset needed
-    python team_ai_model/training/train.py --synthetic --epochs 2
+    python -m team_ai_model.training.train --synthetic --epochs 2
+
+Training augments ONLY the training split (flip / brightness / shift, x[1+factor]),
+uses class weights for imbalance, ReduceLROnPlateau + EarlyStopping on val_accuracy.
+A small self-collected dataset needs augmentation + many samples per word to work.
 
 Outputs:
     team_ai_model/model/model_weights.h5     best model (by val_accuracy)
@@ -22,9 +29,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
+
+_REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(_REPO))
+sys.path.insert(0, str(_REPO / "team_video_processing"))
 
 # run either as a module (python -m team_ai_model.training.train) or as a script
 if __package__:
@@ -32,13 +44,13 @@ if __package__:
     from .dataset import (
         load_dataset, make_synthetic, train_val_split, to_onehot, save_class_names,
     )
-else:  # script: add repo root to sys.path
-    import sys
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+else:
     from team_ai_model.training.model import build_model, compile_model
     from team_ai_model.training.dataset import (
         load_dataset, make_synthetic, train_val_split, to_onehot, save_class_names,
     )
+
+from augment import augment_batch  # noqa: E402  (team_video_processing/augment.py)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_DIR = REPO_ROOT / "team_ai_model" / "model"
@@ -66,11 +78,13 @@ def plot_history(history: dict, path: Path) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Train the LipSense 3D CNN")
-    ap.add_argument("--epochs", type=int, default=40)
+    ap.add_argument("--epochs", type=int, default=60)
     ap.add_argument("--batch", type=int, default=8)
-    ap.add_argument("--lr", type=float, default=1e-3)
+    ap.add_argument("--lr", type=float, default=5e-4)
     ap.add_argument("--val-frac", type=float, default=0.2)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--augment-factor", type=int, default=3,
+                    help="augmented copies added per training sample (0 = off)")
     ap.add_argument("--synthetic", action="store_true",
                     help="train on generated noise (pipeline smoke test, no dataset)")
     args = ap.parse_args()
@@ -92,8 +106,20 @@ def main() -> None:
     X_tr, y_tr, X_val, y_val = train_val_split(X, y, args.val_frac, args.seed)
     print(f"train: {len(X_tr)}   val: {len(X_val)}")
 
+    # augment ONLY the training set (val stays real). Augmentation is what makes a
+    # small self-collected dataset usable - flips / brightness / shifts multiply it.
+    if args.augment_factor > 0 and not args.synthetic:
+        before = len(X_tr)
+        X_tr, y_tr = augment_batch(X_tr, y_tr, factor=args.augment_factor, seed=args.seed)
+        print(f"augment: {before} -> {len(X_tr)} training samples (x{1 + args.augment_factor})")
+
     y_tr_oh = to_onehot(y_tr, num_classes)
     y_val_oh = to_onehot(y_val, num_classes)
+
+    # class weights - if some words have fewer samples, weight them up
+    counts = np.bincount(y_tr, minlength=num_classes)
+    class_weight = {i: float(len(y_tr) / (num_classes * c)) if c else 1.0
+                    for i, c in enumerate(counts)}
 
     save_class_names(class_names)
 
@@ -108,7 +134,10 @@ def main() -> None:
             save_best_only=True, save_weights_only=False, verbose=1,
         ),
         tf.keras.callbacks.EarlyStopping(
-            monitor="val_accuracy", mode="max", patience=10, restore_best_weights=True,
+            monitor="val_accuracy", mode="max", patience=15, restore_best_weights=True,
+        ),
+        tf.keras.callbacks.ReduceLROnPlateau(
+            monitor="val_loss", factor=0.5, patience=6, min_lr=1e-5, verbose=1,
         ),
     ]
     if len(X_val) == 0:
@@ -125,6 +154,7 @@ def main() -> None:
         epochs=args.epochs,
         batch_size=args.batch,
         callbacks=callbacks,
+        class_weight=class_weight,
         verbose=2,
     )
 

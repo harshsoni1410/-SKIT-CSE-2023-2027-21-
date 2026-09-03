@@ -68,9 +68,18 @@ covering the video-processing and UI modules in the meantime; work is tracked ag
 **Status:** Weeks 1–8 of the build roadmap complete. Web demo + standalone demo + training
 + evaluation all run. Remaining real-world work: record an actual dataset, train, tune.
 
+### Fixes after first real training run (random predictions)
+- **Bug:** `train.py` never used `augment.py`. Now augments the training split
+  (`--augment-factor`, default 3 → x4 data), plus class weights + `ReduceLROnPlateau`,
+  higher default epochs (60) and lower LR (5e-4).
+- Added `team_video_processing/inspect_sample.py` — saves a 22-frame montage of a `.npy`
+  sample so you can check the recorded crops actually show a centred, moving mouth
+  (bad data is the usual cause of random predictions).
+
 **Next:**
-- Record a balanced dataset (`collect.py` / `build_dataset.py`), lock the vocabulary,
-  train (`train.py`), validate (`validate_model.py`), then demo with the real model.
+- Record a balanced dataset (`collect.py` / `build_dataset.py`) — **50–100+ samples per
+  word**, start with 4–5 visually different words. Check a few with `inspect_sample.py`.
+  Then `train.py` → `validate_model.py` → demo with the real model.
 
 **Blockers:** none. (Risk: OneDrive keeps corrupting `venv/` — plan to move the project
 off OneDrive.)
