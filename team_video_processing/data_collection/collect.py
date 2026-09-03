@@ -1,7 +1,7 @@
 """
 LipSense - data collection tool.
 
-Member 1, first sprint task: "Collect video dataset".
+Dhruv Sharma, first sprint task: "Collect video dataset".
 
 Records lip-region frame sequences from the webcam, one word at a time, with automatic
 utterance detection (no need to press a key for every sample).

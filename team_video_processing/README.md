@@ -1,6 +1,6 @@
 # team_video_processing — Video Processing & Data Preparation
 
-**Owner:** Member 1 · **Sprint:** Video Processing & Data Preparation
+**Owner:** Dhruv Sharma · **Sprint:** Video Processing & Data Preparation
 
 | Path | Contents |
 |---|---|
