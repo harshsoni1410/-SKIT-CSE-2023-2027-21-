@@ -40,5 +40,5 @@ uvicorn main:app --reload --port 8000
 ## Status (weekly)
 
 - [x] **Week 5** — FastAPI app, `/health`, `/vocab`, `WS /ws/predict`, stub fallback
-- [ ] **Week 6** — frontend WebSocket client wired to `/ws/predict`
+- [x] **Week 6** — frontend WebSocket client wired; end-to-end tested with the stub
 - [ ] **Week 8** — swap stub for the trained model, reconnect handling

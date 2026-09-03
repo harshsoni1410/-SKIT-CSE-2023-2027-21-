@@ -1,4 +1,4 @@
-import { CONFIDENCE_THRESHOLD } from '../mockData.js'
+import { CONFIDENCE_THRESHOLD } from '../constants.js'
 
 // Big predicted word + confidence bar. Below the threshold we show
 // "Prediction uncertain" and keep the top guess small (DESIGN.md rule).

@@ -11,7 +11,9 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173.
+Open http://localhost:5173. For live predictions also start the backend
+(`cd team_ui/backend && uvicorn main:app --port 8000`) — without it the UI still
+runs, it just shows "backend unreachable" when an utterance completes.
 
 ## Build
 
@@ -28,8 +30,9 @@ npm run preview     # serve the built app
 | `src/components/` | `Header`, `WebcamView`, `StatusBadge`, `PredictionCard`, `HistoryList`, `Controls`, `ErrorBanner` |
 | `src/lib/lipDetector.js` | MediaPipe FaceLandmarker wrapper — lip box + 112×80 crop + opening ratio |
 | `src/lib/speechCapture.js` | speaking detection + 22-frame sequence buffer + `sequenceToTensor()` |
-| `src/hooks/useSpeechCapture.js` | React wrapper for `speechCapture` |
-| `src/mockData.js` | temporary sample data — removed once webcam + backend are wired in |
+| `src/lib/predictClient.js` | WebSocket client for the backend `/ws/predict` |
+| `src/hooks/` | `useSpeechCapture`, `usePredictClient` |
+| `src/constants.js` | confidence threshold, WS URL (`VITE_WS_URL`), history limit |
 | `tailwind.config.js` | dark theme tokens (`base`, `card`, `line`, `accent`) |
 
 ## Status (weekly)
@@ -38,9 +41,10 @@ npm run preview     # serve the built app
 - [x] **Week 2** — live webcam (`getUserMedia`), Start/Stop, permission errors, canvas frame loop
 - [x] **Week 3** — in-browser lip detection (MediaPipe FaceLandmarker), lip ROI box + 112×80 crop
 - [x] **Week 4** — calibration + speaking detection + 22-frame sequence buffer + `sequenceToTensor`
-- [ ] **Week 5** — connect to FastAPI backend over WebSocket (stub predictor)
-- [ ] **Week 6** — real model, preprocessing parity check
-- [ ] **Week 7** — testing, error states, mobile, polish
+- [x] **Week 5** — backend built (`team_ui/backend/`, FastAPI + WS, stub predictor)
+- [x] **Week 6** — WebSocket client wired: utterance → `/ws/predict` → word + confidence + history
+- [ ] **Week 7** — standalone `demo/`, dataset build tools
+- [ ] **Week 8** — real model swap, reconnect, mobile, polish
 
 The frame sequence sent to the backend must match the contract in
 [PRD.md § 7](../../PRD.md) / `team_video_processing/preprocessing/preprocess.py`:

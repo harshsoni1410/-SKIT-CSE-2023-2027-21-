@@ -1,4 +1,4 @@
-import { CONFIDENCE_THRESHOLD } from '../mockData.js'
+import { CONFIDENCE_THRESHOLD } from '../constants.js'
 
 // Last ~10 predictions: word, confidence, time.
 export default function HistoryList({ history = [] }) {
