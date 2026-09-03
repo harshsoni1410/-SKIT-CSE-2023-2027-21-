@@ -19,7 +19,9 @@ team_video_processing/dataset/**/*.mp4
 team_video_processing/dataset/**/*.avi
 team_ai_model/model/*.h5
 team_ai_model/model/*.dat
+team_ai_model/model/class_names.json
 team_ai_model/outputs/*.png
+team_ai_model/outputs/*.json
 *.log
 
 # ---- Weekly report ----

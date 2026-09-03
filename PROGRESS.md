@@ -25,12 +25,24 @@ covering the video-processing and UI modules in the meantime; work is tracked ag
 - **AI (Week 3)** — `team_ai_model/training/model.py`: 3D CNN (`build_model` /
   `compile_model`), 3× Conv3D→BN→Pool3D → GlobalAveragePooling3D → Dense → Dropout →
   Softmax. Self-test OK — output `(N, num_classes)`, softmax sums to 1, ~298 K params.
+- **UI (Week 4)** — `Calibrate` button + speaking detection + 22-frame sequence buffer
+  (`src/lib/speechCapture.js`, `src/hooks/useSpeechCapture.js`), mirroring `collect.py`'s
+  calibrate → RECORDING → silence-ends-utterance logic. `sequenceToTensor()` builds the
+  `(1,22,80,112,3)` float tensor. Status now idle→calibrating→not_talking→recording→processing.
+- **AI (Week 4)** — `training/dataset.py` (loads `dataset/<word>/*.npy`, class order from
+  folder names, stratified train/val split, `class_names.json`, synthetic generator) and
+  `training/train.py` (ModelCheckpoint on best val_accuracy, EarlyStopping, history
+  json + png). Smoke-tested: `train.py --synthetic --epochs 2` runs end to end, loss
+  drops 2.07→0.87.
+- **Video (Week 4)** — `team_video_processing/augment.py`: flip, brightness/contrast
+  jitter, small spatial shift, `augment_batch()`. Self-test OK.
 - **Env fix** — `venv/` was corrupted (TensorFlow + pip had missing files, likely
   OneDrive/AV). Recreated from Python 3.10 and reinstalled `requirements.txt`.
 
 **Next:**
-- **Week 4** — UI: speaking detection + 22-frame sequence buffer. AI: `dataset.py` +
-  `train.py` (smoke-tested on synthetic data). Video: `augment.py`.
+- **Week 5** — Backend: `team_ui/backend/` FastAPI (`/health`, `/vocab`, `WS /ws/predict`)
+  with a stub predictor. AI: `evaluate.py` (confusion matrix + per-class accuracy),
+  `predict.py` (tensor → word + confidence).
 
 **Blockers:** none. (Risk: OneDrive keeps corrupting `venv/` — plan to move the project
 off OneDrive.)
