@@ -1,6 +1,6 @@
 # LipSense Frontend — UI Design
 
-> Member 2, first sprint task: "Design user interface — design the basic interface for the
+> Dipesh Yadav, first sprint task: "Design user interface — design the basic interface for the
 > application." This is the design/wireframe. The React + Vite + Tailwind implementation comes
 > in later tasks.
 

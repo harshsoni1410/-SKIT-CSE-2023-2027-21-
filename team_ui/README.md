@@ -1,6 +1,6 @@
 # team_ui — UI Integration & Development
 
-**Owner:** Member 2 · **Sprint:** UI Integration & Development
+**Owner:** Dipesh Yadav · **Sprint:** UI Integration & Development
 
 | Path | Contents |
 |---|---|
