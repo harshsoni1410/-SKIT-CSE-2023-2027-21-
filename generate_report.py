@@ -46,7 +46,10 @@ def get_git_metrics(interval="weekly"):
     Supported intervals: 'weekly', 'monthly', 'final'
     """
     today = datetime.date.today()
-    git_args = ['git', 'log', '--no-merges', '--pretty=format:COMMIT|||%h|||%an|||%ad|||%s', '--date=short', '--numstat']
+    # %aN + --use-mailmap: honour .mailmap so one person's different git names/emails
+    # (e.g. a GitHub noreply address) collapse into a single canonical author.
+    git_args = ['git', 'log', '--no-merges', '--use-mailmap',
+                '--pretty=format:COMMIT|||%h|||%aN|||%ad|||%s', '--date=short', '--numstat']
 
     if interval == "weekly":
         since_date = (today - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
