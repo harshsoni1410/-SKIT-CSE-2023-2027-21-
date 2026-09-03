@@ -4,6 +4,39 @@ Updated weekly. Newest entry on top.
 
 ---
 
+## 2026-09-04 — Build sprint: frontend + model kickoff
+
+Dhruv Sharma and Dipesh Yadav are on emergency family leave (~2–3 months). Harsh is
+covering the video-processing and UI modules in the meantime; work is tracked against
+[`docs/build-roadmap.md`](docs/build-roadmap.md).
+
+**Done:**
+- **UI (Week 1)** — `team_ui/frontend/` React + Vite + Tailwind scaffold; static layout
+  with all components (Header, WebcamView, StatusBadge, PredictionCard, HistoryList,
+  Controls, ErrorBanner) on mock data.
+- **UI (Week 2)** — live webcam via `getUserMedia`, Start/Stop, permission/device error
+  handling, canvas frame loop.
+- **UI (Week 3)** — in-browser lip detection with MediaPipe FaceLandmarker
+  (`src/lib/lipDetector.js`): lip ROI box overlay + 112×80 lip crop + inner-lip opening
+  ratio, matching the `preprocess.py` contract.
+- **Video (Week 2)** — `team_video_processing/face_detection/detector.py`: reusable
+  `FaceLandmarkDetector` wrapping dlib face + 68-landmark detection (factored out of
+  `collect.py`).
+- **AI (Week 3)** — `team_ai_model/training/model.py`: 3D CNN (`build_model` /
+  `compile_model`), 3× Conv3D→BN→Pool3D → GlobalAveragePooling3D → Dense → Dropout →
+  Softmax. Self-test OK — output `(N, num_classes)`, softmax sums to 1, ~298 K params.
+- **Env fix** — `venv/` was corrupted (TensorFlow + pip had missing files, likely
+  OneDrive/AV). Recreated from Python 3.10 and reinstalled `requirements.txt`.
+
+**Next:**
+- **Week 4** — UI: speaking detection + 22-frame sequence buffer. AI: `dataset.py` +
+  `train.py` (smoke-tested on synthetic data). Video: `augment.py`.
+
+**Blockers:** none. (Risk: OneDrive keeps corrupting `venv/` — plan to move the project
+off OneDrive.)
+
+---
+
 ## Week of 2026-09-03 — Foundation + first tasks
 
 **Done:**
