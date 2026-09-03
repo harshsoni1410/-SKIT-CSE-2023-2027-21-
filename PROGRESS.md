@@ -39,10 +39,18 @@ covering the video-processing and UI modules in the meantime; work is tracked ag
 - **Env fix** — `venv/` was corrupted (TensorFlow + pip had missing files, likely
   OneDrive/AV). Recreated from Python 3.10 and reinstalled `requirements.txt`.
 
+- **Backend (Week 5)** — `team_ui/backend/` FastAPI + WebSocket: `GET /health`,
+  `GET /vocab`, `WS /ws/predict`. `predictor.py` loads the trained model if present,
+  else a `StubPredictor` (random word) so the pipeline runs before the model exists.
+  Tested: HTTP endpoints + WS (valid tensor → prediction, bad tensor → error).
+- **AI (Week 5)** — `training/predict.py` (`LipReader` — model file → word + confidence
+  + probs; `load_reader()` returns None when untrained) and `training/evaluate.py`
+  (confusion matrix + per-class accuracy + `metrics.json` via sklearn). Eval pipeline
+  smoke-tested with `--synthetic`.
+
 **Next:**
-- **Week 5** — Backend: `team_ui/backend/` FastAPI (`/health`, `/vocab`, `WS /ws/predict`)
-  with a stub predictor. AI: `evaluate.py` (confusion matrix + per-class accuracy),
-  `predict.py` (tensor → word + confidence).
+- **Week 6** — UI: WebSocket client, send the 22-frame sequence to `/ws/predict`,
+  show `{word, confidence}` + history, `<0.6` → "Prediction uncertain". Remove `mockData.js`.
 
 **Blockers:** none. (Risk: OneDrive keeps corrupting `venv/` — plan to move the project
 off OneDrive.)
