@@ -1,0 +1,33 @@
+# ---- Python ----
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# ---- Node / frontend ----
+node_modules/
+team_ui/frontend/dist/
+team_ui/frontend/.vite/
+npm-debug.log*
+
+# ---- Data & models (bade files, git me nahi) ----
+team_video_processing/dataset/**/*.npy
+team_video_processing/dataset/**/*.mp4
+team_video_processing/dataset/**/*.avi
+team_ai_model/model/*.h5
+team_ai_model/model/*.dat
+team_ai_model/outputs/*.png
+*.log
+
+# ---- Weekly report ----
+# local test runs drop a PDF at the repo root; only the archived ones in weekly_reports/ are kept
+/*.pdf
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
