@@ -52,5 +52,10 @@ npm install
 npm run dev
 ```
 
-See [frontend/README.md](frontend/README.md) for the weekly build status.
-Backend (FastAPI + WebSocket) is added around Week 5.
+```
+cd team_ui/backend
+uvicorn main:app --reload --port 8000
+```
+
+See [frontend/README.md](frontend/README.md) and [backend/README.md](backend/README.md)
+for weekly build status.
