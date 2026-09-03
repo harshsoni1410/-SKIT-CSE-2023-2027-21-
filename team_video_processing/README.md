@@ -4,7 +4,7 @@
 
 | Path | Contents |
 |---|---|
-| `data_collection/` | `collect.py` — record lip-region frame sequences from the webcam |
+| `data_collection/` | `collect.py` — record from the webcam; `build_dataset.py` — turn recorded clips into `.npy` samples |
 | `preprocessing/` | `preprocess.py` — the shared preprocessing function (everyone imports this) |
 | `face_detection/` | `detector.py` — reusable dlib face + 68-landmark detection (`FaceLandmarkDetector`) |
 | `augment.py` | training-only augmentation: flip, brightness/contrast jitter, small shift |
