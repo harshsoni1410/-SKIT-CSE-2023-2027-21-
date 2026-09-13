@@ -12,6 +12,7 @@ export default function WebcamView({ cameraOn, onError, onReady, onLipData }) {
   const rafRef = useRef(0)
   const detectorRef = useRef(null)
   const onLipDataRef = useRef(onLipData)
+  const cancelledRef = useRef(false)
   const [starting, setStarting] = useState(false)
   const [detectorState, setDetectorState] = useState('off') // off | loading | ready | error
 
@@ -25,13 +26,13 @@ export default function WebcamView({ cameraOn, onError, onReady, onLipData }) {
       return
     }
 
-    let cancelled = false
+    cancelledRef.current = false
     setStarting(true)
 
     navigator.mediaDevices
       .getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' }, audio: false })
       .then(async (stream) => {
-        if (cancelled) {
+        if (cancelledRef.current) {
           stream.getTracks().forEach((t) => t.stop())
           return
         }
@@ -44,16 +45,16 @@ export default function WebcamView({ cameraOn, onError, onReady, onLipData }) {
         setStarting(false)
         onReady?.()
         startDrawLoop()
-        initDetector(cancelled)
+        initDetector()
       })
       .catch((err) => {
-        if (cancelled) return
+        if (cancelledRef.current) return
         setStarting(false)
         onError?.(describeMediaError(err))
       })
 
     return () => {
-      cancelled = true
+      cancelledRef.current = true
       teardown()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,9 +64,17 @@ export default function WebcamView({ cameraOn, onError, onReady, onLipData }) {
     if (detectorRef.current) return
     setDetectorState('loading')
     try {
-      detectorRef.current = await createLipDetector()
+      const detector = await createLipDetector()
+      if (cancelledRef.current) {
+        // camera was stopped/unmounted while the model was still loading -
+        // don't leak the detector or touch state for a gone component.
+        detector.close()
+        return
+      }
+      detectorRef.current = detector
       setDetectorState('ready')
     } catch (err) {
+      if (cancelledRef.current) return
       console.error('lip detector failed to load', err)
       setDetectorState('error')
       onError?.('Lip detection model could not load (check your internet connection).')
