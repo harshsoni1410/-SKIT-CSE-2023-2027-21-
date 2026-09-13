@@ -50,6 +50,12 @@ class DetectionResult:
         """The 20 mouth landmarks (dlib indices 48–67)."""
         return self.landmarks[48:68]
 
+    @property
+    def mouth_box(self) -> tuple[int, int, int, int]:
+        """(x1, y1, x2, y2) tight bounding box around just the mouth landmarks."""
+        xs, ys = self.mouth_points[:, 0], self.mouth_points[:, 1]
+        return int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())
+
 
 class FaceLandmarkDetector:
     """Loads the dlib models once and detects the largest face per frame."""
@@ -82,6 +88,8 @@ class FaceLandmarkDetector:
         Detect the largest face in a BGR frame and return its landmarks.
         Returns None if no face is found.
         """
+        if frame_bgr is None or frame_bgr.size == 0:
+            raise ValueError("detect() received an empty frame")
         gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
         faces = self._detector(gray, self._upsample)
         if not faces:
