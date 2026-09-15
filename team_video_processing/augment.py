@@ -42,6 +42,25 @@ def contrast_jitter(seq: np.ndarray, max_factor: float = 0.15,
     return np.clip((seq - mean) * factor + mean, 0.0, 1.0).astype("float32")
 
 
+def time_warp(seq: np.ndarray, max_speed: float = 0.15,
+             rng: np.random.Generator | None = None) -> np.ndarray:
+    """
+    Resample the time axis at a random speed (0.85x-1.15x by default) then resample back
+    to SEQ_LEN. Simulates the same speaker saying the word a bit faster/slower - useful
+    because the model needs to recognise the initial-consonant mouth shape regardless of
+    exactly how many frames it lasted, not memorise one fixed timing.
+    """
+    rng = rng or np.random.default_rng()
+    speed = 1.0 + rng.uniform(-max_speed, max_speed)
+    n = seq.shape[0]
+    src_idx = np.clip(np.arange(n) * speed, 0, n - 1)
+    lo = np.floor(src_idx).astype(int)
+    hi = np.clip(lo + 1, 0, n - 1)
+    frac = (src_idx - lo).reshape(-1, 1, 1, 1)
+    warped = seq[lo] * (1 - frac) + seq[hi] * frac
+    return warped.astype("float32")
+
+
 def spatial_shift(seq: np.ndarray, max_shift: int = 6,
                   rng: np.random.Generator | None = None) -> np.ndarray:
     """Shift every frame by the same small (dx, dy), padding with the edge pixels."""
@@ -62,12 +81,15 @@ def spatial_shift(seq: np.ndarray, max_shift: int = 6,
 
 def augment(seq: np.ndarray, rng: np.random.Generator | None = None,
             p_flip: float = 0.5, p_bright: float = 0.7,
-            p_contrast: float = 0.4, p_shift: float = 0.6) -> np.ndarray:
+            p_contrast: float = 0.4, p_shift: float = 0.6,
+            p_timewarp: float = 0.5) -> np.ndarray:
     """Apply a random combination of transforms to one sequence."""
     rng = rng or np.random.default_rng()
     out = seq.astype("float32", copy=True)
     if rng.random() < p_flip:
         out = horizontal_flip(out)
+    if rng.random() < p_timewarp:
+        out = time_warp(out, rng=rng)
     if rng.random() < p_bright:
         out = brightness_jitter(out, rng=rng)
     if rng.random() < p_contrast:
@@ -100,7 +122,7 @@ if __name__ == "__main__":
     fake = rng.random((SEQ_LEN, FRAME_H, FRAME_W, 3), dtype="float32")
     for name, fn in [("flip", horizontal_flip), ("bright", brightness_jitter),
                      ("contrast", contrast_jitter), ("shift", spatial_shift),
-                     ("augment", augment)]:
+                     ("timewarp", time_warp), ("augment", augment)]:
         out = fn(fake)
         assert out.shape == fake.shape, name
         assert out.min() >= 0.0 and out.max() <= 1.0, name

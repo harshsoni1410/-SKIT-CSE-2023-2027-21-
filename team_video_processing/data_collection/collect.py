@@ -1,7 +1,9 @@
 """
 LipSense - data collection tool.
 
-Dhruv Sharma, first sprint task: "Collect video dataset".
+Dhruv Sharma, first sprint task: "Collect video dataset". Week 9 - multi-word session
+mode + automatic quality gate, so one recording session can cover the whole vocabulary
+and bad samples (blinks, false triggers, dark frames) don't silently pollute training.
 
 Records lip-region frame sequences from the webcam, one word at a time, with automatic
 utterance detection (no need to press a key for every sample).
@@ -11,24 +13,35 @@ Pipeline per frame:
     -> speaking detection (inner-lip distance vs a calibrated threshold)
 
 When an utterance is detected it is normalized to a fixed-length tensor by the SHARED
-preprocessing module and saved as a .npy file:
+preprocessing module, quality-checked, and saved as a .npy file:
 
     team_video_processing/dataset/<word>/<index>.npy      shape (SEQ_LEN, 80, 112, 3), float32
 
-Run from anywhere:
+A CSV log of every save/reject (with a timestamp) is kept at
+team_video_processing/dataset/<word>/session_log.csv - useful to see how many different
+sessions (lighting/time of day/distance from camera) went into a word, since recording
+everything in one sitting makes the dataset overfit to that one sitting's conditions.
+
+Run from anywhere. Single word:
     python team_video_processing/data_collection/collect.py --word hello --samples 20
+
+Multiple words in one sitting (recommended - cycles through the list automatically):
+    python team_video_processing/data_collection/collect.py --words cat,bat,hat,mat,rat,sat --samples 20
 
 Keys while running:
     c  - (re)calibrate the "mouth closed" baseline (keep mouth closed, then press c)
     u  - undo / delete the last saved sample
+    n  - skip to the next word early (multi-word mode)
     q  - quit
 """
 
 from __future__ import annotations
 
 import argparse
+import csv
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 import cv2
@@ -92,6 +105,39 @@ def next_sample_index(word_dir: Path) -> int:
     return (existing[-1] + 1) if existing else 0
 
 
+# ----------------------------------------------------------------------------------------
+# quality gate - catches the two most common causes of bad samples that silently hurt
+# accuracy: a false trigger (blink / camera noise, almost no motion) and a too-dark crop
+# (lighting problem, the model sees mostly noise). Both pass MIN_UTTER_FRAMES easily.
+# ----------------------------------------------------------------------------------------
+MIN_MOTION = 1.5     # mean abs frame-to-frame pixel change (0-255 scale) below this = suspect
+MIN_BRIGHTNESS = 25  # mean pixel value (0-255) below this = too dark
+
+
+def check_quality(raw_frames: list[np.ndarray]) -> tuple[bool, str]:
+    """raw_frames: list of uint8 BGR lip crops (pre-normalization). Returns (ok, reason)."""
+    stacked = np.stack(raw_frames).astype(np.float32)
+    brightness = float(stacked.mean())
+    if brightness < MIN_BRIGHTNESS:
+        return False, f"too dark (mean brightness {brightness:.0f} < {MIN_BRIGHTNESS})"
+
+    diffs = np.abs(np.diff(stacked, axis=0)).mean()
+    if diffs < MIN_MOTION:
+        return False, f"almost no motion (mean frame diff {diffs:.2f} < {MIN_MOTION}) - likely a false trigger"
+
+    return True, "ok"
+
+
+def log_session_event(word_dir: Path, event: str, detail: str = "") -> None:
+    log_path = word_dir / "session_log.csv"
+    is_new = not log_path.exists()
+    with log_path.open("a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        if is_new:
+            writer.writerow(["timestamp", "event", "detail"])
+        writer.writerow([datetime.now().isoformat(timespec="seconds"), event, detail])
+
+
 def draw_hud(frame, lines, color=(0, 255, 0)):
     y = 26
     for text, c in lines:
@@ -99,30 +145,17 @@ def draw_hud(frame, lines, color=(0, 255, 0)):
         y += 30
 
 
-def main():
-    ap = argparse.ArgumentParser(description="LipSense webcam data collection")
-    ap.add_argument("--word", required=True, help="word / class label to record")
-    ap.add_argument("--samples", type=int, default=20, help="how many samples to collect")
-    ap.add_argument("--camera", type=int, default=0, help="camera index")
-    ap.add_argument("--flip", action="store_true", help="mirror the webcam image")
-    args = ap.parse_args()
+def record_word(cap, detector, predictor, word: str, samples: int, flip: bool,
+                calib: dict) -> str:
+    """
+    Run the recording loop for a single word. `calib` is shared across words (a dict with
+    closed_baseline/open_threshold/close_threshold/calib_buffer/calibrating) so calibration
+    done for the first word carries over to the rest unless re-done with 'c'.
 
-    word = args.word.strip().lower()
+    Returns "quit", "next" (user pressed n / word finished) to tell the caller what to do.
+    """
     word_dir = DATASET_DIR / word
     word_dir.mkdir(parents=True, exist_ok=True)
-
-    _dlib, detector, predictor = load_dlib()
-
-    cap = cv2.VideoCapture(args.camera)
-    if not cap.isOpened():
-        sys.exit(f"Cannot open camera {args.camera}")
-
-    # ---- state ----
-    closed_baseline = None          # calibrated "mouth closed" ratio
-    open_threshold = None
-    close_threshold = None
-    calib_buffer: list[float] = []
-    calibrating = True
 
     recording = False
     utter_frames: list[np.ndarray] = []
@@ -130,16 +163,17 @@ def main():
 
     collected = next_sample_index(word_dir)   # continue if some samples already exist
     last_saved_path: Path | None = None
-    target = collected + args.samples
+    target = collected + samples
 
-    print(f"Recording '{word}'  ->  {word_dir}")
-    print("Keep your mouth CLOSED and press 'c' to calibrate. Then speak the word normally.")
+    print(f"\nRecording '{word}'  ->  {word_dir}")
+    if calib["calibrating"]:
+        print("Keep your mouth CLOSED and press 'c' to calibrate. Then speak the word normally.")
 
     while True:
         ok, frame = cap.read()
         if not ok:
             break
-        if args.flip:
+        if flip:
             frame = cv2.flip(frame, 1)
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -166,14 +200,16 @@ def main():
                 cv2.circle(frame, (int(x), int(y)), 1, (255, 200, 0), -1)
 
             # ---- calibration ----
-            if calibrating:
+            if calib["calibrating"]:
                 state_text, state_color = "CALIBRATING - keep mouth closed, press 'c'", (0, 200, 255)
-                calib_buffer.append(ratio)
-                if len(calib_buffer) > CALIB_FRAMES:
-                    calib_buffer.pop(0)
+                calib["calib_buffer"].append(ratio)
+                if len(calib["calib_buffer"]) > CALIB_FRAMES:
+                    calib["calib_buffer"].pop(0)
 
             # ---- speaking detection (only after calibration) ----
-            elif open_threshold is not None and lip_crop is not None:
+            elif calib["open_threshold"] is not None and lip_crop is not None:
+                open_threshold = calib["open_threshold"]
+                close_threshold = calib["close_threshold"]
                 speaking = ratio > open_threshold if not recording else ratio > close_threshold
 
                 if speaking:
@@ -199,14 +235,21 @@ def main():
                 # ---- utterance just ended ----
                 if not recording and utter_frames:
                     if len(utter_frames) >= MIN_UTTER_FRAMES:
-                        tensor = normalize_sequence(utter_frames)  # (SEQ_LEN, H, W, 3)
-                        idx = next_sample_index(word_dir)
-                        out_path = word_dir / f"{idx:03d}.npy"
-                        np.save(out_path, tensor)
-                        last_saved_path = out_path
-                        collected = idx + 1
-                        print(f"  saved {out_path.name}  ({len(utter_frames)} raw frames)")
-                        state_text, state_color = "SAVED", (0, 255, 0)
+                        ok_quality, reason = check_quality(utter_frames)
+                        if ok_quality:
+                            tensor = normalize_sequence(utter_frames)  # (SEQ_LEN, H, W, 3)
+                            idx = next_sample_index(word_dir)
+                            out_path = word_dir / f"{idx:03d}.npy"
+                            np.save(out_path, tensor)
+                            last_saved_path = out_path
+                            collected = idx + 1
+                            print(f"  saved {out_path.name}  ({len(utter_frames)} raw frames)")
+                            log_session_event(word_dir, "saved", out_path.name)
+                            state_text, state_color = "SAVED", (0, 255, 0)
+                        else:
+                            print(f"  rejected: {reason}")
+                            log_session_event(word_dir, "rejected", reason)
+                            state_text, state_color = "REJECTED - " + reason[:30], (0, 100, 255)
                     else:
                         print(f"  discarded short utterance ({len(utter_frames)} frames)")
                     utter_frames = []
@@ -220,9 +263,9 @@ def main():
         ]
         if ratio is not None:
             hud.append((f"lip ratio: {ratio:.3f}"
-                        + (f"  open>{open_threshold:.3f}" if open_threshold else "  (not calibrated)"),
+                        + (f"  open>{calib['open_threshold']:.3f}" if calib["open_threshold"] else "  (not calibrated)"),
                         (200, 200, 200)))
-        hud.append(("keys: c=calibrate  u=undo  q=quit", (160, 160, 160)))
+        hud.append(("keys: c=calibrate  u=undo  n=next word  q=quit", (160, 160, 160)))
         draw_hud(frame, hud)
 
         # show the current lip crop (top-right)
@@ -235,16 +278,20 @@ def main():
         key = cv2.waitKey(1) & 0xFF
 
         if key == ord("q"):
-            break
+            return "quit"
+        elif key == ord("n"):
+            print(f"Skipping to next word ({collected} samples collected for '{word}').")
+            return "next"
         elif key == ord("c"):
-            if len(calib_buffer) >= CALIB_FRAMES // 2:
-                arr = np.array(calib_buffer)
+            if len(calib["calib_buffer"]) >= CALIB_FRAMES // 2:
+                arr = np.array(calib["calib_buffer"])
                 closed_baseline = float(arr.mean())
                 spread = max(0.04, 2.5 * float(arr.std()))
-                open_threshold = closed_baseline + spread
-                close_threshold = closed_baseline + spread * 0.6
-                calibrating = False
-                print(f"calibrated: closed={closed_baseline:.3f}  open>{open_threshold:.3f}")
+                calib["closed_baseline"] = closed_baseline
+                calib["open_threshold"] = closed_baseline + spread
+                calib["close_threshold"] = closed_baseline + spread * 0.6
+                calib["calibrating"] = False
+                print(f"calibrated: closed={closed_baseline:.3f}  open>{calib['open_threshold']:.3f}")
             else:
                 print("not enough frames yet - look at the camera with mouth closed")
         elif key == ord("u"):
@@ -252,6 +299,7 @@ def main():
                 last_saved_path.unlink()
                 collected = max(0, collected - 1)
                 print(f"deleted {last_saved_path.name}")
+                log_session_event(word_dir, "undo", last_saved_path.name)
                 last_saved_path = None
             else:
                 print("nothing to undo")
@@ -259,10 +307,51 @@ def main():
         if collected >= target:
             print(f"Done - collected {collected} samples for '{word}'.")
             time.sleep(0.5)
+            return "next"
+
+    return "next"
+
+
+def main():
+    ap = argparse.ArgumentParser(description="LipSense webcam data collection")
+    ap.add_argument("--word", help="single word / class label to record")
+    ap.add_argument("--words", help="comma-separated list of words to record in one sitting, "
+                                     "e.g. cat,bat,hat,mat,rat,sat")
+    ap.add_argument("--samples", type=int, default=20, help="how many samples to collect per word")
+    ap.add_argument("--camera", type=int, default=0, help="camera index")
+    ap.add_argument("--flip", action="store_true", help="mirror the webcam image")
+    args = ap.parse_args()
+
+    if args.words:
+        word_list = [w.strip().lower() for w in args.words.split(",") if w.strip()]
+    elif args.word:
+        word_list = [args.word.strip().lower()]
+    else:
+        sys.exit("pass --word <word> or --words word1,word2,...")
+
+    _dlib, detector, predictor = load_dlib()
+
+    cap = cv2.VideoCapture(args.camera)
+    if not cap.isOpened():
+        sys.exit(f"Cannot open camera {args.camera}")
+
+    calib = {
+        "closed_baseline": None,
+        "open_threshold": None,
+        "close_threshold": None,
+        "calib_buffer": [],
+        "calibrating": True,
+    }
+
+    print(f"Session plan: {word_list}  ({args.samples} samples each)")
+    for word in word_list:
+        result = record_word(cap, detector, predictor, word, args.samples, args.flip, calib)
+        if result == "quit":
             break
 
     cap.release()
     cv2.destroyAllWindows()
+    print("\nSession finished.")
 
 
 if __name__ == "__main__":
