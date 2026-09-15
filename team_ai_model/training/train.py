@@ -9,14 +9,19 @@ Usage:
     python -m team_ai_model.training.train --epochs 60 --batch 8
 
     # more augmentation for a very small dataset
-    python -m team_ai_model.training.train --epochs 80 --augment-factor 5
+    python -m team_ai_model.training.train --epochs 80 --augment-factor 8
+
+    # compare against the original order-agnostic architecture
+    python -m team_ai_model.training.train --architecture cnn
 
     # pipeline smoke test, no dataset needed
     python -m team_ai_model.training.train --synthetic --epochs 2
 
-Training augments ONLY the training split (flip / brightness / shift, x[1+factor]),
-uses class weights for imbalance, ReduceLROnPlateau + EarlyStopping on val_accuracy.
-A small self-collected dataset needs augmentation + many samples per word to work.
+Training augments ONLY the training split (flip / time-warp / brightness / contrast /
+shift, x[1+factor]), uses class weights for imbalance, ReduceLROnPlateau + EarlyStopping
+on val_accuracy. Default architecture is cnn_lstm (BiLSTM over frame order - see
+model.py) since the target vocabulary is now visually-similar minimal pairs
+(cat/bat/hat/mat/rat/sat) that only differ in the first couple of frames.
 
 Outputs:
     team_ai_model/model/model_weights.h5     best model (by val_accuracy)
@@ -83,8 +88,13 @@ def main() -> None:
     ap.add_argument("--lr", type=float, default=5e-4)
     ap.add_argument("--val-frac", type=float, default=0.2)
     ap.add_argument("--seed", type=int, default=42)
-    ap.add_argument("--augment-factor", type=int, default=3,
+    ap.add_argument("--augment-factor", type=int, default=5,
                     help="augmented copies added per training sample (0 = off)")
+    ap.add_argument("--architecture", choices=["cnn_lstm", "cnn"], default="cnn_lstm",
+                    help="cnn_lstm (default) keeps frame order for onset-consonant "
+                         "words like cat/bat/hat; cnn is the faster order-agnostic original")
+    ap.add_argument("--label-smoothing", type=float, default=0.05,
+                    help="soften one-hot targets a little (helps with visually close classes)")
     ap.add_argument("--synthetic", action="store_true",
                     help="train on generated noise (pipeline smoke test, no dataset)")
     args = ap.parse_args()
@@ -125,7 +135,11 @@ def main() -> None:
 
     import tensorflow as tf
 
-    model = compile_model(build_model(num_classes), learning_rate=args.lr)
+    model = compile_model(
+        build_model(num_classes, architecture=args.architecture),
+        learning_rate=args.lr,
+        label_smoothing=args.label_smoothing,
+    )
     model.summary()
 
     callbacks = [
