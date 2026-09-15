@@ -28,6 +28,11 @@ Run from anywhere. Single word:
 Multiple words in one sitting (recommended - cycles through the list automatically):
     python team_video_processing/data_collection/collect.py --words cat,bat,hat,mat,rat,sat --samples 20
 
+Using a phone as a webcam (DroidCam/Iriun) instead of the laptop's built-in camera -
+find the right --camera/--backend combo first with team_video_processing/list_cameras.py,
+then pass both here, e.g.:
+    python team_video_processing/data_collection/collect.py --words ... --camera 2 --backend dshow
+
 Keys while running:
     c  - (re)calibrate the "mouth closed" baseline (keep mouth closed, then press c)
     u  - undo / delete the last saved sample
@@ -319,6 +324,10 @@ def main():
                                      "e.g. cat,bat,hat,mat,rat,sat")
     ap.add_argument("--samples", type=int, default=20, help="how many samples to collect per word")
     ap.add_argument("--camera", type=int, default=0, help="camera index")
+    ap.add_argument("--backend", choices=["default", "dshow"], default="default",
+                    help="OpenCV capture backend - use 'dshow' for phone-as-webcam apps "
+                         "(DroidCam/Iriun) if 'default' doesn't find them "
+                         "(see team_video_processing/list_cameras.py)")
     ap.add_argument("--flip", action="store_true", help="mirror the webcam image")
     args = ap.parse_args()
 
@@ -331,9 +340,11 @@ def main():
 
     _dlib, detector, predictor = load_dlib()
 
-    cap = cv2.VideoCapture(args.camera)
+    backend = cv2.CAP_DSHOW if args.backend == "dshow" else cv2.CAP_ANY
+    cap = cv2.VideoCapture(args.camera, backend)
     if not cap.isOpened():
-        sys.exit(f"Cannot open camera {args.camera}")
+        sys.exit(f"Cannot open camera {args.camera} (backend={args.backend}). "
+                  f"Run team_video_processing/list_cameras.py to find the right combo.")
 
     calib = {
         "closed_baseline": None,

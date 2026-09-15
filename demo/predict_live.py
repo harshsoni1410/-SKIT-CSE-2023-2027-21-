@@ -58,6 +58,9 @@ def draw_hud(frame, lines):
 def main() -> None:
     ap = argparse.ArgumentParser(description="LipSense live demo")
     ap.add_argument("--camera", type=int, default=0)
+    ap.add_argument("--backend", choices=["default", "dshow"], default="default",
+                    help="use 'dshow' for phone-as-webcam apps (DroidCam/Iriun) - see "
+                         "team_video_processing/list_cameras.py")
     ap.add_argument("--flip", action="store_true", help="mirror the webcam image")
     args = ap.parse_args()
 
@@ -67,9 +70,10 @@ def main() -> None:
         print("[demo] no trained model - running capture only "
               "(train: python -m team_ai_model.training.train --epochs 40)")
 
-    cap = cv2.VideoCapture(args.camera)
+    backend = cv2.CAP_DSHOW if args.backend == "dshow" else cv2.CAP_ANY
+    cap = cv2.VideoCapture(args.camera, backend)
     if not cap.isOpened():
-        sys.exit(f"cannot open camera {args.camera}")
+        sys.exit(f"cannot open camera {args.camera} (backend={args.backend})")
 
     calib_buffer: deque[float] = deque(maxlen=CALIB_FRAMES)
     calibrating = True
