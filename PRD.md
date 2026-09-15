@@ -25,15 +25,23 @@ predicts a spoken word only from **video (lip movement)** — no audio is used.
 - Multiple simultaneous speakers, side profile, very low light.
 - Any language support — English words only for now.
 
-## 4. Vocabulary (draft — locked only after training)
+## 4. Vocabulary (locked, Week 9)
 
 ```
-a, bye, can, cat, demo, dog, hello, here, is, lips, my, read, you
+bat, cat, hat, mat, rat, sat
 ```
 
-> This is only a draft. The **actual class list and order come from the dataset folder names
-> plus the training code**. The label mapping is not finalized until the dataset is ready.
-> Training and prediction must use the **exact same class ordering**.
+Deliberately a **rhyming minimal-pair set**: all six words share the same "-at" mouth
+shape for almost the whole utterance and differ only in the opening consonant
+(b/c/h/m/r/s). This is the hard version of word-level lip reading — a model that just
+learns "mouth opens wide then closes" gets every word confused with the other five. It
+is the project's actual differentiator (see section 8) instead of a set of words that
+are already visually distinct from each other.
+
+> The **actual class list and order still come from the dataset folder names plus the
+> training code** (`team_ai_model/training/dataset.py::list_classes`), not this file —
+> this list only says which folders should exist under `team_video_processing/dataset/`.
+> Training and prediction must use the **exact same class ordering** (`class_names.json`).
 
 ## 5. Functional requirements
 
@@ -80,8 +88,27 @@ Values are locked after training. Draft:
 ## 8. Success criteria
 
 - Per-class accuracy report + confusion matrix on a test set.
-- Correct live prediction for at least 6 words (`hello, dog, cat, you, my, bye`).
+- Correct live prediction for the 6-word rhyming set (`bat, cat, hat, mat, rat, sat`) —
+  this is a genuinely hard sub-problem of lip reading (see the viseme note below), so the
+  bar is "well above the 1/6 = 16.7% random-guess baseline, with the confusion matrix
+  showing the model is actually using the initial-consonant shape" rather than a fixed
+  percentage.
 - End-to-end demo working through the frontend.
+
+**Known technical limit (say this plainly in the viva, don't hide it):** on lips, several
+consonants look near-identical - b/m/p share the same closed-lips shape, and the visible
+difference for the /r/, /k/ (c), /h/, /s/, /t/ family is smaller than the visible
+difference between e.g. "hello" vs "dog". Human lip-readers get this same category of
+word wrong without context. Mitigations actually used here: (1) a temporal
+(Conv3D+BiLSTM) model that looks at *when* the mouth moves, not just an averaged shape —
+see `team_ai_model/training/model.py`; (2) recording protocol that asks for a slightly
+exaggerated, deliberate mouth shape per word (not casual mumbling) so the initial
+consonant is visually bigger; (3) enough samples across multiple recording sessions per
+word that the model learns the consonant cue instead of memorising one session's
+lighting/pose. If per-class accuracy still comes out uneven, the confusion matrix
+(`team_ai_model/outputs/confusion_matrix.png`) will mostly show confusion inside
+sub-groups that share a viseme (e.g. bat↔mat, cat↔hat) — that is the expected, explainable
+failure mode, not a bug.
 
 ## 9. Development environment (Windows)
 

@@ -4,6 +4,64 @@ Updated weekly. Newest entry on top.
 
 ---
 
+## 2026-09-15 — Week 9: locking the real target (accurate similar-word detection)
+
+Full build (Weeks 1-8) was already done; this week turns it toward the project's actual
+point: correctly telling apart words that look almost identical on the lips.
+
+**Decisions locked in:**
+- **Vocabulary:** `bat, cat, hat, mat, rat, sat` — a rhyming minimal-pair set, chosen on
+  purpose because it's the hard case (differ only in the first consonant), not a
+  hedge-with-easy-words set. See `PRD.md` §4/§8 for the honest technical framing.
+- **Dataset:** self-recorded via `collect.py`, no public dataset for now (fits the
+  existing pipeline directly; can add transfer learning later if accuracy needs it).
+- **Weekly reports:** generated locally on demand (`python generate_report.py weekly`)
+  instead of relying on GitHub Actions, since work isn't being pushed yet (see below).
+
+**Done:**
+- `team_ai_model/training/model.py` — new `cnn_lstm` architecture (Conv3D → Bidirectional
+  LSTM, keeps frame order instead of averaging it away) as the default, `cnn` (old
+  design) kept for comparison via `--architecture`. Self-tested both, ~258K / ~297K
+  params.
+- `team_video_processing/augment.py` — added `time_warp` (speaking-speed jitter).
+- `team_video_processing/data_collection/collect.py` — `--words w1,w2,...` session mode,
+  automatic reject-on-bad-quality (dark frames / near-zero motion), `session_log.csv`.
+- `team_ai_model/training/train.py` — `--architecture`, `--label-smoothing` flags;
+  default `--augment-factor` 3 → 5.
+- Full pipeline re-smoke-tested end to end (`train.py --synthetic --epochs 2`) with the
+  new architecture — runs clean, ~13-19s/epoch on this CPU-only laptop for a tiny
+  synthetic set (real training will take a lot longer; see "Next").
+- `.github/workflows/auto_weekly_report.yml` — paused the Thursday schedule
+  (`workflow_dispatch` still works for a manual run) since it runs against whatever is
+  on GitHub, and nothing is being pushed there right now — left running it would just
+  produce empty/stale reports on the remote.
+- `PRD.md` / `docs/build-roadmap.md` updated with the vocabulary decision and the
+  viseme-ambiguity limitation, written down before results come in rather than after.
+
+**Recording protocol for the real dataset (the part only Harsh can do — needs the
+physical webcam):**
+- `python team_video_processing/data_collection/collect.py --words bat,cat,hat,mat,rat,sat --samples 25`
+  run several times (different sittings) until each word has 100+ samples — don't do it
+  all in one sitting, or the model will learn today's lighting/pose instead of the word.
+- Say each word a little more deliberately than casual speech — don't full-on
+  exaggerate, but a clear, unhurried mouth shape gives the model a bigger signal for the
+  initial consonant, which is the entire thing it needs to tell these six words apart.
+- Vary lighting / time of day / distance from camera across sittings on purpose.
+- After each sitting, spot check a few new samples with
+  `python team_video_processing/inspect_sample.py <path-to-a-.npy>` and check
+  `dataset/<word>/session_log.csv` for a lot of "rejected" lines (means recalibrate `c`
+  or fix lighting).
+
+**Next:** once a real dataset exists, `train.py --epochs 80 --augment-factor 5` →
+`evaluate.py` → `demo/validate_model.py`, then look at `confusion_matrix.png` — confusion
+clustering inside viseme groups (bat/mat, cat/hat) is expected; confusion spread evenly
+across all six means something upstream (data quality, calibration) needs fixing first.
+
+**Blockers:** none. (Same OneDrive/`venv` corruption risk as before — still recommend
+moving the project off OneDrive eventually.)
+
+---
+
 ## 2026-09-04 — Build sprint: frontend + model kickoff
 
 Dhruv Sharma and Dipesh Yadav are on emergency family leave (~2–3 months). Harsh is

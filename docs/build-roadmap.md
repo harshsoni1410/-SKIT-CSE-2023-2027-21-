@@ -64,6 +64,31 @@ The model input contract is fixed: **22 frames, 80×112, RGB, 0–1** —
 - Error states, reconnect, mobile layout, loading states.
 - README + `PROGRESS.md` + `docs/weekly/` updates, final demo recording notes.
 
+## Week 9 — locking the real target: accurate detection on visually-similar words
+Weeks 1-8 built and smoke-tested the whole pipeline; nothing had been trained on real
+data yet. Week 9 locks the actual project goal (per PRD.md §4/§8) and upgrades the parts
+that matter most for it, ahead of the real recording + training push:
+
+- **AI:** `team_ai_model/training/model.py` — added a `cnn_lstm` architecture (Conv3D
+  trunk, time axis mostly preserved, → Bidirectional LSTM → softmax), now the default.
+  The old `GlobalAveragePooling3D` design averages all 22 frames together, which throws
+  away exactly the signal that separates cat/bat/hat/mat/rat/sat (the first couple of
+  frames). `--architecture cnn` keeps the old one for comparison. Added label smoothing
+  (`compile_model(..., label_smoothing=0.05)`) since some classes are genuinely close in
+  viseme space.
+- **Video:** `team_video_processing/augment.py` — added `time_warp` (±15% speed) so the
+  model doesn't overfit to one exact speaking tempo. `data_collection/collect.py` —
+  `--words a,b,c` session mode (record the whole vocabulary in one sitting instead of
+  relaunching per word), an automatic quality gate (rejects too-dark / near-zero-motion
+  "utterances" that used to pass MIN_UTTER_FRAMES but were false triggers), and a
+  `session_log.csv` per word so recording-session diversity is visible later.
+- **AI:** `team_ai_model/training/train.py` — `--architecture` / `--label-smoothing`
+  flags wired through; default `--augment-factor` raised 3→5 for the smaller-per-class
+  real dataset this vocabulary implies.
+- **Docs:** `PRD.md` vocabulary locked to the rhyming set, with an explicit note on the
+  viseme-ambiguity limitation and what's actually being done about it (see PRD §8) —
+  written down now so it isn't a surprise result later.
+
 ---
 
 ## Push flow (each week)
