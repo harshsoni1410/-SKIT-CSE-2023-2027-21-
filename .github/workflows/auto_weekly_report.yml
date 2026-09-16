@@ -1,15 +1,10 @@
 name: Weekly Progress Report Auto-Commit
 
-# Schedule is paused (Week 9, 2026-09-15): work is being committed locally but not
-# pushed to GitHub for now, so a scheduled run here would only see the stale remote
-# history and produce an empty/duplicate report. Re-enable the `schedule:` block below
-# once pushes resume. `workflow_dispatch` still works for an on-demand run in the
-# meantime.
 on:
-  # schedule:
-  #   # Runs every Thursday at 11:59 PM IST (which corresponds to 18:29 UTC)
-  #   # Cron format: min hour day-of-month month day-of-week (4 = Thursday)
-  #   - cron: '29 18 * * 4'
+  schedule:
+    # Runs every Thursday at 11:59 PM IST (which corresponds to 18:29 UTC)
+    # Cron format: min hour day-of-month month day-of-week (4 = Thursday)
+    - cron: '29 18 * * 4'
   workflow_dispatch: # Allows manual trigger anytime from the Actions tab
 
 permissions:
