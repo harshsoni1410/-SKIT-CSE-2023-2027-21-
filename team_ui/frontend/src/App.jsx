@@ -72,9 +72,11 @@ export default function App() {
   }
 
   function handleClear() {
+  if (window.confirm('Clear all prediction history?')) {
     setHistory([])
-    setPrediction(null)
   }
+}
+
 
   return (
     <div className="mx-auto flex min-h-full max-w-5xl flex-col">
