@@ -56,6 +56,12 @@ class DetectionResult:
         xs, ys = self.mouth_points[:, 0], self.mouth_points[:, 1]
         return int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())
 
+    @property
+    def mouth_center(self) -> tuple[int, int]:
+        """(x, y) center point of the mouth landmarks."""
+        x1, y1, x2, y2 = self.mouth_box
+        return (x1 + x2) // 2, (y1 + y2) // 2
+
 
 class FaceLandmarkDetector:
     """Loads the dlib models once and detects the largest face per frame."""
