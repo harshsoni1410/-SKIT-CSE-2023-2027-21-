@@ -1,5 +1,5 @@
 """
-Week 3 - LipSense 3D CNN architecture. Week 9 - added a temporal (BiLSTM) head.
+Week 3 - LipSense 3D CNN architecture. Build 9 - added a temporal (BiLSTM) head.
 
 Harsh Soni, sprint task: "AI model design - designed AI model architecture for lip reading."
 

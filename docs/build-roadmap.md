@@ -64,9 +64,16 @@ The model input contract is fixed: **22 frames, 80×112, RGB, 0–1** —
 - Error states, reconnect, mobile layout, loading states.
 - README + `PROGRESS.md` + `docs/weekly/` updates, final demo recording notes.
 
-## Week 9 — locking the real target: accurate detection on visually-similar words
+> **Naming note:** from here on this roadmap uses "Build N" instead of "Week N" for
+> these sprint chunks. They were never real calendar weeks (Weeks 1-8 above were all
+> built in one sitting) and "Week N" here was colliding with the unrelated, genuinely
+> calendar-based week number in the Form-3 progress report (`generate_report.py`) - e.g.
+> this is "Build 9" while the actual current progress report is "Week 3". Same kind of
+> work as before, just an unambiguous label.
+
+## Build 9 — locking the real target: accurate detection on visually-similar words
 Weeks 1-8 built and smoke-tested the whole pipeline; nothing had been trained on real
-data yet. Week 9 locks the actual project goal (per PRD.md §4/§8) and upgrades the parts
+data yet. Build 9 locks the actual project goal (per PRD.md §4/§8) and upgrades the parts
 that matter most for it, ahead of the real recording + training push:
 
 - **AI:** `team_ai_model/training/model.py` — added a `cnn_lstm` architecture (Conv3D

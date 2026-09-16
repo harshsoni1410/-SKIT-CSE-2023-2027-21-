@@ -4,7 +4,11 @@ Updated weekly. Newest entry on top.
 
 ---
 
-## 2026-09-15 — Week 9: locking the real target (accurate similar-word detection)
+## 2026-09-15 — Build 9: locking the real target (accurate similar-word detection)
+
+(Note: "Build N" here is an internal dev-sprint counter, not a calendar week - it's
+unrelated to the Form-3 weekly progress report's "Week N", which is based on real
+calendar time since project start. This is Build 9, the actual current report is Week 3.)
 
 Full build (Weeks 1-8) was already done; this week turns it toward the project's actual
 point: correctly telling apart words that look almost identical on the lips.

@@ -1,7 +1,7 @@
 """
 LipSense - data collection tool.
 
-Dhruv Sharma, first sprint task: "Collect video dataset". Week 9 - multi-word session
+Dhruv Sharma, first sprint task: "Collect video dataset". Build 9 - multi-word session
 mode + automatic quality gate, so one recording session can cover the whole vocabulary
 and bad samples (blinks, false triggers, dark frames) don't silently pollute training.
 

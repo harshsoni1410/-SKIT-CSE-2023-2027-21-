@@ -25,7 +25,7 @@ predicts a spoken word only from **video (lip movement)** — no audio is used.
 - Multiple simultaneous speakers, side profile, very low light.
 - Any language support — English words only for now.
 
-## 4. Vocabulary (locked, Week 9)
+## 4. Vocabulary (locked, Build 9 - see docs/build-roadmap.md for what "Build N" means)
 
 ```
 bat, cat, hat, mat, rat, sat
