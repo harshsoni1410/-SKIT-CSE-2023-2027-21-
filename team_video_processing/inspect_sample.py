@@ -8,6 +8,7 @@ dark, or barely show lips, no model will learn from them.
     python team_video_processing/inspect_sample.py                       # a random sample
     python team_video_processing/inspect_sample.py dataset/hello/003.npy # a specific one
     python team_video_processing/inspect_sample.py --all hello           # montage per word
+    python team_video_processing/inspect_sample.py --summary             # quality table, all words
 
 Saves a PNG montage (22 frames in a grid) next to this script, and also tries to show it.
 """
@@ -23,6 +24,32 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 DATASET_DIR = HERE / "dataset"
+
+# same thresholds as collect.py's quality gate (kept here so this script needs no dlib import)
+MIN_MOTION = 1.5
+MIN_BRIGHTNESS = 25
+
+
+def summarize_dataset() -> None:
+    """Print per-word sample count + how many samples look too dark or static."""
+    word_dirs = sorted(d for d in DATASET_DIR.iterdir() if d.is_dir() and any(d.glob("*.npy")))
+    if not word_dirs:
+        sys.exit(f"no .npy samples under {DATASET_DIR} - record some with collect.py first")
+
+    print(f"{'word':<8}{'samples':>8}{'dark':>6}{'static':>8}{'brightness':>12}{'motion':>8}")
+    for d in word_dirs:
+        brightness, motion = [], []
+        dark = static = 0
+        for f in sorted(d.glob("*.npy")):
+            seq = np.load(f) * 255.0
+            b = float(seq.mean())
+            m = float(np.abs(np.diff(seq, axis=0)).mean())
+            brightness.append(b)
+            motion.append(m)
+            dark += b < MIN_BRIGHTNESS
+            static += m < MIN_MOTION
+        print(f"{d.name:<8}{len(brightness):>8}{dark:>6}{static:>8}"
+              f"{np.mean(brightness):>12.1f}{np.mean(motion):>8.2f}")
 
 
 def montage(seq: np.ndarray, cols: int = 8) -> np.ndarray:
@@ -42,7 +69,13 @@ def main() -> None:
     ap.add_argument("--all", metavar="WORD", help="montage the first sample of each class, "
                                                   "or all samples of WORD")
     ap.add_argument("--show", action="store_true", help="also open a window (else just save the PNG)")
+    ap.add_argument("--summary", action="store_true",
+                    help="print sample count and dark/static counts for every word (no files written)")
     args = ap.parse_args()
+
+    if args.summary:
+        summarize_dataset()
+        return
 
     import cv2
 
