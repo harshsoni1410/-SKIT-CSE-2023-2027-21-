@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Header from './components/Header.jsx'
 import WebcamView from './components/WebcamView.jsx'
 import StatusBadge from './components/StatusBadge.jsx'
@@ -10,6 +10,7 @@ import ConnectionBadge from './components/ConnectionBadge.jsx'
 import { useSpeechCapture } from './hooks/useSpeechCapture.js'
 import { usePredictClient } from './hooks/usePredictClient.js'
 import { sequenceToTensor } from './lib/speechCapture.js'
+import { fetchVocab } from './lib/api.js'
 import { HISTORY_LIMIT } from './constants.js'
 
 // State shape follows DESIGN.md "State (in App)".
@@ -21,8 +22,17 @@ export default function App() {
   const [predicting, setPredicting] = useState(false)
   const [history, setHistory] = useState([])
   const [error, setError] = useState(null)
+  const [vocab, setVocab] = useState([])
 
   const predictClient = usePredictClient({ enabled: cameraOn })
+
+  // Fetch once the backend is actually reachable; retries on every reconnect
+  // until it succeeds (harmless no-op once vocab is already loaded).
+  useEffect(() => {
+    if (predictClient.connState === 'open' && vocab.length === 0) {
+      fetchVocab().then(setVocab).catch(() => {})
+    }
+  }, [predictClient.connState, vocab.length])
 
   const handleUtterance = useCallback(
     async (sequence) => {
@@ -30,7 +40,7 @@ export default function App() {
       setPredicting(true)
       try {
         const res = await predictClient.predict(tensor)
-        setPrediction({ word: res.word, confidence: res.confidence })
+        setPrediction({ word: res.word, confidence: res.confidence, probs: res.probs })
         setHistory((h) => [
           { word: res.word, confidence: res.confidence, time: new Date().toLocaleTimeString() },
           ...h,
@@ -110,7 +120,7 @@ export default function App() {
             <StatusBadge status={status} />
           </div>
           <div className="card p-4">
-            <PredictionCard prediction={prediction} predicting={predicting} />
+            <PredictionCard prediction={prediction} predicting={predicting} vocab={vocab} />
           </div>
           <div className="card p-4">
             <HistoryList history={history} />

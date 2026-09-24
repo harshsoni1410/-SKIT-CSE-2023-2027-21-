@@ -111,7 +111,7 @@ export class PredictClient {
 
   /**
    * @param {{data: Float32Array, shape: number[]}} tensor
-   * @returns {Promise<{word:string, confidence:number, stub:boolean}>}
+   * @returns {Promise<{word:string, confidence:number, stub:boolean, probs?:number[]}>}
    */
   predict(tensor, timeoutMs = 8000) {
     return new Promise((resolve, reject) => {
