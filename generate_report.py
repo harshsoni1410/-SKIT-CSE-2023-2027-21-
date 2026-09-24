@@ -64,11 +64,14 @@ def get_git_metrics(interval="weekly"):
 
     if interval == "weekly":
         since_date = (today - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
-        git_args.append(f"--since={since_date}")
+        # Bare "YYYY-MM-DD" is parsed by git as UTC midnight, not local midnight,
+        # which silently drops early-morning IST commits (the "date-window bug").
+        # Pinning the time to local midnight fixes it.
+        git_args.append(f"--since={since_date} 00:00:00")
         scope_title = f"Last 7 Days (Since {since_date})"
     elif interval == "monthly":
         since_date = (today - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
-        git_args.append(f"--since={since_date}")
+        git_args.append(f"--since={since_date} 00:00:00")
         scope_title = f"Last 30 Days (Since {since_date})"
     else:
         scope_title = "Complete Project Lifecycle (All Commits)"
