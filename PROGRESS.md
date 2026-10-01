@@ -4,6 +4,37 @@ Updated weekly. Newest entry on top.
 
 ---
 
+## 2026-10-01 — Week 5: first real-data run + evaluation fixes
+
+(All of this week's work was done by Harsh, who is covering the video and UI modules too.)
+
+**Done:**
+- Dataset check: the first recording sitting (2026-09-16) gives 25 samples per word for
+  all six words. `inspect_sample.py --summary` shows 0 dark / 0 static samples. Session
+  logs committed.
+- Started the first training run on real data (`cnn_lstm`, 40 epochs, augment x5) and
+  stopped it after a few minutes. On this CPU-only laptop one epoch takes more than 5 min,
+  so a full run is about 1.5–3 h. **The full run moves to next week, so there are no
+  accuracy numbers yet.**
+- `evaluate.py`: now scores only the held-out val split (same split as `train.py`).
+  Before, it scored the whole dataset, including training samples, which would have
+  inflated the reported accuracy. `--split all` keeps the old behaviour.
+- `train.py` / `predict.py`: stopping the run exposed a bug. `class_names.json` was
+  written before training, so it no longer matched the saved weights (6 names, 3-class
+  weights). Names are now saved with each checkpoint, and `LipReader` rejects a
+  mismatched pair.
+- `train.py`: live per-epoch log (`outputs/training_log.csv`) + line-buffered output, so a
+  long run can be followed and a stopped run keeps its numbers.
+
+**Next:**
+- Record 2–3 more sittings (different lighting/time) toward 100+ samples per word.
+- Full `train.py --epochs 40` run (leave the laptop plugged in, no sleep) → `evaluate.py`
+  → check `confusion_matrix.png` for viseme-group confusion (bat/mat, cat/hat).
+
+**Blockers:** training time on CPU only (no GPU).
+
+---
+
 ## 2026-09-15 — Build 9: locking the real target (accurate similar-word detection)
 
 (Note: "Build N" here is an internal dev-sprint counter, not a calendar week - it's
