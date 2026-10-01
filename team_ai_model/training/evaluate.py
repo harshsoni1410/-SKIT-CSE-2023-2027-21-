@@ -3,7 +3,8 @@ Week 5 - evaluate the trained LipSense model.
 
 Harsh Soni, sprint task: evaluation - confusion matrix + per-class accuracy.
 
-    python team_ai_model/training/evaluate.py                 # uses the real dataset + trained model
+    python team_ai_model/training/evaluate.py                 # held-out val split of the real dataset
+    python team_ai_model/training/evaluate.py --split all     # every sample (includes training data - optimistic)
     python team_ai_model/training/evaluate.py --synthetic     # pipeline smoke test (untrained)
 
 Writes to team_ai_model/outputs/:
@@ -22,13 +23,13 @@ import numpy as np
 
 if __package__:
     from .model import build_model
-    from .dataset import load_dataset, make_synthetic
+    from .dataset import load_dataset, make_synthetic, train_val_split
     from .predict import LipReader
 else:
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     from team_ai_model.training.model import build_model
-    from team_ai_model.training.dataset import load_dataset, make_synthetic
+    from team_ai_model.training.dataset import load_dataset, make_synthetic, train_val_split
     from team_ai_model.training.predict import LipReader
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -89,6 +90,13 @@ def main() -> None:
     ap.add_argument("--synthetic", action="store_true",
                     help="use generated data + an untrained model (smoke test)")
     ap.add_argument("--batch", type=int, default=16)
+    ap.add_argument("--split", choices=["val", "all"], default="val",
+                    help="val = only the held-out samples train.py never saw (default); "
+                         "all = whole dataset, inflated by training samples")
+    ap.add_argument("--val-frac", type=float, default=0.2,
+                    help="must match the train.py run being evaluated")
+    ap.add_argument("--seed", type=int, default=42,
+                    help="must match the train.py run being evaluated")
     args = ap.parse_args()
 
     from sklearn.metrics import (
@@ -108,6 +116,9 @@ def main() -> None:
         if reader.class_names != classes:
             print(f"[warn] class order mismatch:\n  dataset={classes}\n  model={reader.class_names}")
             classes = reader.class_names
+        if args.split == "val":
+            # same stratified split as train.py, so these are samples the model never trained on
+            _, _, X, y = train_val_split(X, y, args.val_frac, args.seed)
         predict_fn = lambda xb: reader.model.predict(xb, verbose=0).argmax(axis=1)  # noqa: E731
 
     y_pred = _predict_all(predict_fn, X, args.batch)
@@ -132,6 +143,7 @@ def main() -> None:
         "overall_accuracy": overall,
         "macro_f1": macro_f1,
         "classes": classes,
+        "split": "synthetic" if args.synthetic else args.split,
         "n_samples": int(len(X)),
         "per_class_accuracy": per_class_acc,
         "classification_report": report,
