@@ -12,3 +12,7 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 // How many predictions to keep in the history list.
 export const HISTORY_LIMIT = 10
+
+// If the top two words are closer than this, the UI flags it as a "close call"
+// (e.g. bat vs mat - visually similar on the lips).
+export const CLOSE_CALL_MARGIN = 0.1

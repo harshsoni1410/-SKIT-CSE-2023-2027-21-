@@ -1,4 +1,4 @@
-import { CONFIDENCE_THRESHOLD } from '../constants.js'
+import { CONFIDENCE_THRESHOLD, CLOSE_CALL_MARGIN } from '../constants.js'
 
 // Big predicted word + confidence bar. Below the threshold we show
 // "Prediction uncertain" and keep the top guess small (DESIGN.md rule).
@@ -16,6 +16,9 @@ export default function PredictionCard({ prediction, predicting = false, vocab =
           .sort((a, b) => b.p - a.p)
           .slice(0, 3)
       : null
+
+  // top two guesses nearly tied -> the model couldn't separate two look-alike words
+  const closeCall = ranked && ranked.length >= 2 && ranked[0].p - ranked[1].p < CLOSE_CALL_MARGIN
 
   return (
     <div>
@@ -76,6 +79,12 @@ export default function PredictionCard({ prediction, predicting = false, vocab =
               </li>
             ))}
           </ul>
+          {closeCall && (
+            <p className="mt-2 text-xs text-amber-300">
+              ⚠ Close call: <span className="uppercase">{ranked[0].word}</span> vs{' '}
+              <span className="uppercase">{ranked[1].word}</span> look alike on the lips
+            </p>
+          )}
         </div>
       )}
     </div>
