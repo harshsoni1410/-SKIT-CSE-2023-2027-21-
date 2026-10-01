@@ -28,6 +28,7 @@ Outputs:
     team_ai_model/model/class_names.json     word order used for training
     team_ai_model/outputs/history.json       loss / accuracy per epoch
     team_ai_model/outputs/history.png        training curves
+    team_ai_model/outputs/training_log.csv   per-epoch log, written live during training
 """
 
 from __future__ import annotations
@@ -99,6 +100,9 @@ def main() -> None:
                     help="train on generated noise (pipeline smoke test, no dataset)")
     args = ap.parse_args()
 
+    # stdout is block-buffered when redirected to a file; keep epoch lines live
+    sys.stdout.reconfigure(line_buffering=True)
+
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -131,9 +135,21 @@ def main() -> None:
     class_weight = {i: float(len(y_tr) / (num_classes * c)) if c else 1.0
                     for i, c in enumerate(counts)}
 
-    save_class_names(class_names)
-
     import tensorflow as tf
+
+    class SaveClassNamesWithCheckpoint(tf.keras.callbacks.Callback):
+        """Write class_names.json only when ModelCheckpoint has written new weights, so a
+        run stopped before its first checkpoint can't pair new names with old weights."""
+
+        def __init__(self):
+            super().__init__()
+            self._mtime = WEIGHTS_PATH.stat().st_mtime if WEIGHTS_PATH.exists() else None
+
+        def on_epoch_end(self, epoch, logs=None):
+            mtime = WEIGHTS_PATH.stat().st_mtime if WEIGHTS_PATH.exists() else None
+            if mtime != self._mtime:
+                save_class_names(class_names)
+                self._mtime = mtime
 
     model = compile_model(
         build_model(num_classes, architecture=args.architecture),
@@ -161,6 +177,12 @@ def main() -> None:
         val_data = None
     else:
         val_data = (X_val, y_val_oh)
+    # per-epoch log written as it goes - long CPU runs can be watched, and a run that
+    # gets stopped early still leaves its numbers behind
+    callbacks += [
+        SaveClassNamesWithCheckpoint(),
+        tf.keras.callbacks.CSVLogger(str(OUTPUT_DIR / "training_log.csv")),
+    ]
 
     hist = model.fit(
         X_tr, y_tr_oh,
@@ -181,6 +203,7 @@ def main() -> None:
 
     if not WEIGHTS_PATH.exists():
         model.save(WEIGHTS_PATH)
+    save_class_names(class_names)
 
     best = max(history.get("val_accuracy", history["accuracy"]))
     print(f"\n[done] best {'val_' if val_data else ''}accuracy: {best:.3f}")

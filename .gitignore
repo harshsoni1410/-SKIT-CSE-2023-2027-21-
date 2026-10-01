@@ -22,6 +22,7 @@ team_ai_model/model/*.dat
 team_ai_model/model/class_names.json
 team_ai_model/outputs/*.png
 team_ai_model/outputs/*.json
+team_ai_model/outputs/*.csv
 *.log
 
 # ---- Weekly report ----

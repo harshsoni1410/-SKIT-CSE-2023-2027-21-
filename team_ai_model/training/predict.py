@@ -41,6 +41,14 @@ class LipReader:
 
         self.model = tf.keras.models.load_model(weights_path)
         self.class_names: list[str] = json.loads(class_names_path.read_text(encoding="utf-8"))
+        n_out = int(self.model.output_shape[-1])
+        if n_out != len(self.class_names):
+            # happens when a train.py run is stopped before its first checkpoint
+            raise ValueError(
+                f"model has {n_out} outputs but class_names.json lists "
+                f"{len(self.class_names)} words {self.class_names} - weights and names "
+                f"are from different training runs, re-run train.py"
+            )
 
     def predict(self, tensor) -> tuple[str, float, list[float]]:
         """
