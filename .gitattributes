@@ -1,0 +1,2 @@
+# PDFs are binary - stop core.autocrlf from rewriting their line endings
+*.pdf binary
