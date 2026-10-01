@@ -6,7 +6,7 @@ Updated weekly. Newest entry on top.
 
 ## 2026-10-01 — Week 5: first real-data run + evaluation fixes
 
-(All of this week's work was done by Harsh, who is covering the video and UI modules too.)
+(Harsh: model + data. Dhruv and Dipesh each added one change to their own module this week; Harsh is still covering the rest of their modules while they are away.)
 
 **Done:**
 - Dataset check: the first recording sitting (2026-09-16) gives 25 samples per word for
@@ -25,6 +25,11 @@ Updated weekly. Newest entry on top.
   mismatched pair.
 - `train.py`: live per-epoch log (`outputs/training_log.csv`) + line-buffered output, so a
   long run can be followed and a stopped run keeps its numbers.
+- (Dhruv) `collect.py`: `--session` tag. Each `session_log.csv` row now records which
+  sitting it came from (default: today's date), so later recordings in different lighting
+  can be told apart.
+- (Dipesh) `PredictionCard`: "Close call: BAT vs MAT" hint when the top two probabilities
+  are within 10% (`CLOSE_CALL_MARGIN`), so the demo shows where look-alike words get confused.
 
 **Next:**
 - Record 2–3 more sittings (different lighting/time) toward 100+ samples per word.
