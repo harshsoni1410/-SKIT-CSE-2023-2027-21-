@@ -63,7 +63,9 @@ def get_git_metrics(interval="weekly"):
                 '--pretty=format:COMMIT|||%h|||%aN|||%ad|||%s', '--date=short', '--numstat']
 
     if interval == "weekly":
-        since_date = (today - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
+        # 6 days back, not 7: reports are generated on Thursdays, so a 7-day window
+        # starts on the previous report's day and counts those commits a second time.
+        since_date = (today - datetime.timedelta(days=6)).strftime("%Y-%m-%d")
         # Bare "YYYY-MM-DD" is parsed by git as UTC midnight, not local midnight,
         # which silently drops early-morning IST commits (the "date-window bug").
         # Pinning the time to local midnight fixes it.
