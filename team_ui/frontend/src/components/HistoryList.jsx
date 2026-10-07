@@ -2,6 +2,12 @@ import { CONFIDENCE_THRESHOLD } from '../constants.js'
 
 // Last ~10 predictions: word, confidence, time.
 export default function HistoryList({ history = [] }) {
+  // average confidence of the predictions shown below (0 if there are none)
+  const shown = history.slice(0, 10)
+  const avg = shown.length
+    ? Math.round((shown.reduce((sum, item) => sum + item.confidence, 0) / shown.length) * 100)
+    : 0
+
   return (
     <div>
       <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -28,6 +34,13 @@ export default function HistoryList({ history = [] }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {shown.length > 0 && (
+        <p className="mt-2 text-xs text-slate-500">
+          Average confidence: <span className="text-slate-300">{avg}%</span> over{' '}
+          {shown.length} prediction{shown.length === 1 ? '' : 's'}
+        </p>
       )}
     </div>
   )
