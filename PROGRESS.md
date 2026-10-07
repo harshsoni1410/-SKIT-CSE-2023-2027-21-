@@ -11,6 +11,10 @@ Updated weekly. Newest entry on top.
   if it lands in the true word's look-alike group (bat/mat, cat/hat/rat/sat). Next to
   plain accuracy, it shows whether mistakes are the expected lip-shape confusions or a
   data problem. Tested on a hand-built confusion matrix.
+- (Dhruv) `inspect_sample.py --summary`: new `sessions` column, the number of separate
+  recording sittings per word (from the `--session` tags). Right now it's 1 for every word.
+- (Dipesh) `HistoryList`: "Average confidence: N% over K predictions" line under the
+  history.
 
 **Not done this week:** no new recording sitting and no full training run. Dataset is
 still 25 samples/word from one sitting, so there are no accuracy numbers yet.
