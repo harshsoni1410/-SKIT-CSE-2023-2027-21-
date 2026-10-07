@@ -35,6 +35,22 @@ else:
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = REPO_ROOT / "team_ai_model" / "outputs"
 
+# Words that look (almost) the same on the lips - see PRD.md section 8. b/m are both
+# bilabial closures; c(k)/h/r/s all start from a similar open "-at" mouth shape.
+VISEME_GROUPS = [["bat", "mat"], ["cat", "hat", "rat", "sat"]]
+
+
+def viseme_group_accuracy(cm: np.ndarray, classes: list[str]) -> float | None:
+    """Share of predictions that land in the true word's viseme group (exact hits
+    included). High group accuracy but low word accuracy = the expected look-alike
+    confusion; low group accuracy = an upstream data/calibration problem."""
+    group_of = {w: i for i, g in enumerate(VISEME_GROUPS) for w in g}
+    if not all(c in group_of for c in classes):
+        return None  # vocabulary isn't the bat/cat/... set (e.g. --synthetic)
+    same = sum(cm[i, j] for i, a in enumerate(classes) for j, b in enumerate(classes)
+               if group_of[a] == group_of[b])
+    return float(same / cm.sum()) if cm.sum() else 0.0
+
 
 def _predict_all(predict_fn, X: np.ndarray, batch: int = 16) -> np.ndarray:
     preds = []
@@ -135,6 +151,7 @@ def main() -> None:
     for i, cls in enumerate(classes):
         total = cm[i].sum()
         per_class_acc[cls] = float(cm[i, i] / total) if total else 0.0
+    group_acc = viseme_group_accuracy(cm, classes)
 
     plot_confusion(cm, classes, OUTPUT_DIR / "confusion_matrix.png")
     plot_per_class_accuracy(per_class_acc, OUTPUT_DIR / "per_class_accuracy.png")
@@ -142,6 +159,7 @@ def main() -> None:
     metrics = {
         "overall_accuracy": overall,
         "macro_f1": macro_f1,
+        "viseme_group_accuracy": group_acc,
         "classes": classes,
         "split": "synthetic" if args.synthetic else args.split,
         "n_samples": int(len(X)),
@@ -152,6 +170,8 @@ def main() -> None:
     (OUTPUT_DIR / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
     print(f"\noverall accuracy: {overall:.3f}   macro-F1: {macro_f1:.3f}")
+    if group_acc is not None:
+        print(f"viseme-group accuracy: {group_acc:.3f}  (right look-alike group, e.g. bat<->mat)")
     for cls, a in per_class_acc.items():
         print(f"  {cls:10s} {a:.3f}")
     print(f"\nsaved -> {OUTPUT_DIR}/confusion_matrix.png, per_class_accuracy.png, metrics.json")
