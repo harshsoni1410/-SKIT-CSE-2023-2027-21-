@@ -14,8 +14,8 @@ Saves a PNG montage (22 frames in a grid) next to this script, and also tries to
 """
 
 from __future__ import annotations
-
 import argparse
+import csv
 import random
 import sys
 from pathlib import Path
@@ -30,13 +30,26 @@ MIN_MOTION = 1.5
 MIN_BRIGHTNESS = 25
 
 
+def count_sessions(word_dir: Path) -> int:
+    """How many different recording sittings (collect.py --session tags) a word has."""
+    log = word_dir / "session_log.csv"
+    if not log.exists():
+        return 0
+    with log.open(newline="", encoding="utf-8") as f:
+        rows = list(csv.reader(f))[1:]  # skip the header row
+    # session is the 4th column; old files have a 3-column header, so read by position
+    tags = {(r[3] if len(r) > 3 and r[3] else "untagged")
+            for r in rows if len(r) > 1 and r[1] == "saved"}
+    return len(tags)
+
+
 def summarize_dataset() -> None:
     """Print per-word sample count + how many samples look too dark or static."""
     word_dirs = sorted(d for d in DATASET_DIR.iterdir() if d.is_dir() and any(d.glob("*.npy")))
     if not word_dirs:
         sys.exit(f"no .npy samples under {DATASET_DIR} - record some with collect.py first")
 
-    print(f"{'word':<8}{'samples':>8}{'dark':>6}{'static':>8}{'brightness':>12}{'motion':>8}")
+    print(f"{'word':<8}{'samples':>8}{'dark':>6}{'static':>8}{'brightness':>12}{'motion':>8}{'sessions':>10}")
     for d in word_dirs:
         brightness, motion = [], []
         dark = static = 0
@@ -49,7 +62,7 @@ def summarize_dataset() -> None:
             dark += b < MIN_BRIGHTNESS
             static += m < MIN_MOTION
         print(f"{d.name:<8}{len(brightness):>8}{dark:>6}{static:>8}"
-              f"{np.mean(brightness):>12.1f}{np.mean(motion):>8.2f}")
+              f"{np.mean(brightness):>12.1f}{np.mean(motion):>8.2f}{count_sessions(d):>10}")
 
 
 def montage(seq: np.ndarray, cols: int = 8) -> np.ndarray:
