@@ -4,6 +4,22 @@ Updated weekly. Newest entry on top.
 
 ---
 
+## 2026-10-08 — Week 6: evaluation metric for look-alike words
+
+**Done:**
+- `evaluate.py`: new **viseme-group accuracy** metric. It counts a prediction as right
+  if it lands in the true word's look-alike group (bat/mat, cat/hat/rat/sat). Next to
+  plain accuracy, it shows whether mistakes are the expected lip-shape confusions or a
+  data problem. Tested on a hand-built confusion matrix.
+
+**Not done this week:** no new recording sitting and no full training run. Dataset is
+still 25 samples/word from one sitting, so there are no accuracy numbers yet.
+
+**Next:** record 2–3 sittings with `--session`, then the full training run →
+`evaluate.py` (now including group accuracy).
+
+---
+
 ## 2026-10-01 — Week 5: first real-data run + evaluation fixes
 
 (Harsh: model + data. Dhruv and Dipesh each added one change to their own module this week; Harsh is still covering the rest of their modules while they are away.)
