@@ -19,11 +19,8 @@ import numpy as np
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-# draft vocabulary (PRD.md section 4) - only used by the stub, before class_names.json exists
-DRAFT_VOCAB = [
-    "a", "bye", "can", "cat", "demo", "dog", "hello",
-    "here", "is", "lips", "my", "read", "you",
-]
+# locked vocabulary (PRD.md section 4) - only used by the stub, before class_names.json exists
+DRAFT_VOCAB = ["bat", "cat", "hat", "mat", "rat", "sat"]
 
 INPUT_SHAPE = (22, 80, 112, 3)
 
