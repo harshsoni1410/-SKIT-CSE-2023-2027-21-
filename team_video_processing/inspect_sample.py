@@ -98,7 +98,9 @@ def main() -> None:
         if not files:
             sys.exit(f"no samples in {word_dir}")
         rows = []
-        for f in files[:12]:
+        # spread the 12 picks over all samples, so later sittings show up too
+        step = max(1, len(files) // 12)
+        for f in files[::step][:12]:
             rows.append(montage(np.load(f), cols=22))
         img = np.vstack(rows)
         out = HERE / f"_inspect_{args.all}.png"
