@@ -4,6 +4,24 @@ Updated weekly. Newest entry on top.
 
 ---
 
+## 2026-10-15 — Week 7: second recording sitting + full training run started
+
+**Done:**
+- Recorded a second sitting in daylight (`--session day-window`), 25 more samples per
+  word. Dataset is now **50 samples/word over 2 sittings**; `inspect_sample.py --summary`
+  shows 0 dark / 0 static. Spot-checked new samples visually.
+- Started the first full training run on real data (`cnn_lstm`, 40 epochs, augment x2,
+  240 train / 60 val). Augmentation went down from x5 to x2 so a CPU-only run stays
+  around 3 h. It runs as a separate process, so per-epoch results land in
+  `outputs/training_log.csv` even if the run gets interrupted.
+- Backend stub predictor now uses the locked bat/cat/hat/mat/rat/sat vocabulary.
+- Removed the Week 3 demo snapshot folder used for the mentor review.
+
+**Next:** read the training results → `evaluate.py` (accuracy, viseme-group accuracy,
+confusion matrix) → write them up here.
+
+---
+
 ## 2026-10-08 — Week 6: evaluation metric for look-alike words
 
 **Done:**
