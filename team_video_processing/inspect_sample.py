@@ -6,8 +6,8 @@ sure each shows a clear, centred mouth moving through the word. If the crops are
 dark, or barely show lips, no model will learn from them.
 
     python team_video_processing/inspect_sample.py                       # a random sample
-    python team_video_processing/inspect_sample.py dataset/hello/003.npy # a specific one
-    python team_video_processing/inspect_sample.py --all hello           # montage per word
+    python team_video_processing/inspect_sample.py dataset/bat/003.npy   # a specific one
+    python team_video_processing/inspect_sample.py --all bat             # 12 samples of one word
     python team_video_processing/inspect_sample.py --summary             # quality table, all words
 
 Saves a PNG montage (22 frames in a grid) next to this script, and also tries to show it.
