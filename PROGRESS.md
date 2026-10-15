@@ -16,6 +16,10 @@ Updated weekly. Newest entry on top.
   `outputs/training_log.csv` even if the run gets interrupted.
 - Backend stub predictor now uses the locked bat/cat/hat/mat/rat/sat vocabulary.
 - Removed the Week 3 demo snapshot folder used for the mentor review.
+- (Dipesh) New `VocabHint` card in the UI that lists the words the model knows (from
+  `GET /vocab`), so a first-time user knows what to say.
+- (Dhruv) `inspect_sample.py --all` now picks its 12 samples across the whole folder
+  instead of only the first 12, so samples from both sittings show up.
 
 **Next:** read the training results → `evaluate.py` (accuracy, viseme-group accuracy,
 confusion matrix) → write them up here.
