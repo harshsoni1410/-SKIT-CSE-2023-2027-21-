@@ -7,6 +7,7 @@ import HistoryList from './components/HistoryList.jsx'
 import Controls from './components/Controls.jsx'
 import ErrorBanner from './components/ErrorBanner.jsx'
 import ConnectionBadge from './components/ConnectionBadge.jsx'
+import VocabHint from './components/VocabHint.jsx'
 import { useSpeechCapture } from './hooks/useSpeechCapture.js'
 import { usePredictClient } from './hooks/usePredictClient.js'
 import { sequenceToTensor } from './lib/speechCapture.js'
@@ -118,6 +119,9 @@ export default function App() {
         <aside className="flex min-w-0 flex-col gap-4 lg:w-2/5">
           <div className="card p-4">
             <StatusBadge status={status} />
+          </div>
+          <div className="card p-4">
+            <VocabHint vocab={vocab} />
           </div>
           <div className="card p-4">
             <PredictionCard prediction={prediction} predicting={predicting} vocab={vocab} />
