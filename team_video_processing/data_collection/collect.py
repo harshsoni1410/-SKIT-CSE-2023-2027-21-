@@ -46,6 +46,7 @@ import argparse
 import csv
 import sys
 import time
+from collections import deque
 from datetime import datetime
 from pathlib import Path
 
@@ -77,6 +78,11 @@ CALIB_FRAMES = 40        # frames used to measure the "mouth closed" baseline
 SILENCE_FRAMES = 7       # consecutive "closed" frames that end an utterance
 MIN_UTTER_FRAMES = 6     # shorter than this -> discard (likely a blink / noise)
 MAX_UTTER_FRAMES = 60    # safety cap
+# Frames kept from just BEFORE the mouth opens past the threshold. Recording only starts
+# on mouth-open, so without this the lip closure that begins b/m ("bat"/"mat") is cut off
+# and mat looks like hat. Same value in demo/predict_live.py and the web UI's
+# speechCapture.js (docs/preprocessing-parity.md).
+PRE_ROLL_FRAMES = 5
 
 
 def load_dlib():
@@ -165,6 +171,8 @@ def record_word(cap, detector, predictor, word: str, samples: int, flip: bool,
     recording = False
     utter_frames: list[np.ndarray] = []
     silence_count = 0
+    pre_roll: deque[np.ndarray] = deque(maxlen=PRE_ROLL_FRAMES)
+    n_pre = 0  # how many of utter_frames came from the pre-roll
 
     collected = next_sample_index(word_dir)   # continue if some samples already exist
     last_saved_path: Path | None = None
@@ -220,7 +228,9 @@ def record_word(cap, detector, predictor, word: str, samples: int, flip: bool,
                 if speaking:
                     if not recording:
                         recording = True
-                        utter_frames = []
+                        utter_frames = list(pre_roll)
+                        n_pre = len(utter_frames)
+                        pre_roll.clear()
                         silence_count = 0
                     utter_frames.append(lip_crop.copy())
                     silence_count = 0
@@ -235,11 +245,13 @@ def record_word(cap, detector, predictor, word: str, samples: int, flip: bool,
                         if silence_count >= SILENCE_FRAMES:
                             recording = False
                     else:
+                        pre_roll.append(lip_crop.copy())
                         state_text, state_color = "NOT TALKING", (0, 255, 0)
 
                 # ---- utterance just ended ----
                 if not recording and utter_frames:
-                    if len(utter_frames) >= MIN_UTTER_FRAMES:
+                    # only count the frames that were actually spoken, not the pre-roll
+                    if len(utter_frames) - n_pre >= MIN_UTTER_FRAMES:
                         ok_quality, reason = check_quality(utter_frames)
                         if ok_quality:
                             tensor = normalize_sequence(utter_frames)  # (SEQ_LEN, H, W, 3)
@@ -256,9 +268,12 @@ def record_word(cap, detector, predictor, word: str, samples: int, flip: bool,
                             log_session_event(word_dir, "rejected", reason, session)
                             state_text, state_color = "REJECTED - " + reason[:30], (0, 100, 255)
                     else:
-                        print(f"  discarded short utterance ({len(utter_frames)} frames)")
+                        print(f"  discarded short utterance ({len(utter_frames) - n_pre} frames)")
                     utter_frames = []
+                    n_pre = 0
                     silence_count = 0
+        else:
+            pre_roll.clear()  # face lost - don't splice stale frames onto the next word
 
         # ---------------- HUD ----------------
         hud = [

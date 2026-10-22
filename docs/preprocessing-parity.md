@@ -17,6 +17,8 @@ and predictions collapse (PRD.md §7, `docs/workflow.md`).
 | final tensor | **(1, 22, 80, 112, 3)** | `frames_to_tensor()` | `sequenceToTensor()` |
 | lip crop margin | **0.35 of box** | `CROP_MARGIN` | `CROP_MARGIN` in `lipDetector.js` |
 | length fix | uniform sample / pad last | `fix_sequence_length()` | `fixSequenceLength()` |
+| utterance start | **5 pre-roll frames** before mouth-open | `PRE_ROLL_FRAMES` in `collect.py`, `predict_live.py` | `PRE_ROLL_FRAMES` in `speechCapture.js` |
+| min utterance | **6 spoken frames** (pre-roll not counted) | `MIN_UTTER_FRAMES` | `MIN_UTTER_FRAMES` |
 
 ## The one real difference — landmark source
 
@@ -32,7 +34,8 @@ dlib points 62/66 vs MediaPipe points 13/14 — again the same quantity.
 ## Keeping them in sync
 
 If any value in `preprocess.py` changes, update **all** of:
-`preprocess.py`, `lipDetector.js`, `speechCapture.js`, `PRD.md §7`, this file —
+`preprocess.py`, `collect.py`, `predict_live.py`, `lipDetector.js`, `speechCapture.js`,
+`PRD.md §7`, this file —
 then rebuild the dataset and retrain.
 
 ## Checking it

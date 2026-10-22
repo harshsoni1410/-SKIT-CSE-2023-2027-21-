@@ -17,6 +17,9 @@ const CALIB_FRAMES = 40 // frames sampled for the "mouth closed" baseline
 const SILENCE_FRAMES = 7 // consecutive "closed" frames that end an utterance
 const MIN_UTTER_FRAMES = 6 // shorter -> discarded (blink / noise)
 const MAX_UTTER_FRAMES = 60 // safety cap
+// frames kept from just before mouth-open, so the b/m lip closure isn't cut off
+// (same PRE_ROLL_FRAMES as collect.py / predict_live.py)
+const PRE_ROLL_FRAMES = 5
 
 /**
  * Force a list of frames to exactly `seqLen`:
@@ -90,6 +93,8 @@ export class SpeechCapture {
     this.closeThreshold = null
     this._recording = false
     this._utterFrames = []
+    this._preRoll = []
+    this._nPre = 0
     this._silence = 0
     this._status = 'not_talking'
   }
@@ -107,6 +112,7 @@ export class SpeechCapture {
     this._calibrating = true
     this._recording = false
     this._utterFrames = []
+    this._preRoll = []
     this._setStatus('calibrating')
   }
 
@@ -146,6 +152,7 @@ export class SpeechCapture {
     }
 
     if (!data) {
+      this._preRoll = [] // face lost - don't splice stale frames onto the next word
       if (this._recording) this._tickSilence()
       else this._setStatus('not_talking')
       return
@@ -158,7 +165,9 @@ export class SpeechCapture {
     if (speaking) {
       if (!this._recording) {
         this._recording = true
-        this._utterFrames = []
+        this._utterFrames = this._preRoll
+        this._nPre = this._preRoll.length
+        this._preRoll = []
         this._silence = 0
       }
       this._utterFrames.push(cloneCanvas(data.crop))
@@ -168,6 +177,8 @@ export class SpeechCapture {
     } else if (this._recording) {
       this._tickSilence()
     } else {
+      this._preRoll.push(cloneCanvas(data.crop))
+      if (this._preRoll.length > PRE_ROLL_FRAMES) this._preRoll.shift()
       this._setStatus('not_talking')
     }
   }
@@ -179,11 +190,13 @@ export class SpeechCapture {
 
   _endUtterance() {
     const frames = this._utterFrames
+    const spoken = frames.length - this._nPre // pre-roll frames don't count toward the minimum
     this._recording = false
     this._utterFrames = []
+    this._nPre = 0
     this._silence = 0
 
-    if (frames.length >= MIN_UTTER_FRAMES) {
+    if (spoken >= MIN_UTTER_FRAMES) {
       this._setStatus('processing')
       this.onUtterance?.(fixSequenceLength(frames, SEQ_LEN))
     } else {

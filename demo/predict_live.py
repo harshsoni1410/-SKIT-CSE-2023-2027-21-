@@ -45,6 +45,7 @@ CALIB_FRAMES = 40
 SILENCE_FRAMES = 7
 MIN_UTTER_FRAMES = 6
 MAX_UTTER_FRAMES = 60
+PRE_ROLL_FRAMES = 5   # frames kept from before mouth-open (catches the b/m lip closure)
 LOW_CONFIDENCE = 0.6  # below this -> "uncertain" (PRD.md FR-10)
 
 
@@ -82,6 +83,8 @@ def main() -> None:
     recording = False
     utter_frames: list[np.ndarray] = []
     silence = 0
+    pre_roll: deque[np.ndarray] = deque(maxlen=PRE_ROLL_FRAMES)
+    n_pre = 0
 
     last_word = "-"
     last_conf = 0.0
@@ -112,7 +115,9 @@ def main() -> None:
                 speaking = ratio > (close_threshold if recording else open_threshold)
                 if speaking:
                     if not recording:
-                        recording, utter_frames, silence = True, [], 0
+                        recording, utter_frames, silence = True, list(pre_roll), 0
+                        n_pre = len(utter_frames)
+                        pre_roll.clear()
                     utter_frames.append(lip.copy())
                     silence = 0
                     state, color = f"RECORDING ({len(utter_frames)})", (0, 0, 255)
@@ -124,10 +129,11 @@ def main() -> None:
                     if silence >= SILENCE_FRAMES:
                         recording = False
                 else:
+                    pre_roll.append(lip.copy())
                     state, color = "NOT TALKING", (0, 255, 0)
 
                 if not recording and utter_frames:
-                    if len(utter_frames) >= MIN_UTTER_FRAMES:
+                    if len(utter_frames) - n_pre >= MIN_UTTER_FRAMES:
                         seq = normalize_sequence(utter_frames)  # (SEQ_LEN, H, W, 3)
                         if reader is not None:
                             word, conf, _ = reader.predict(seq[None, ...])
@@ -137,7 +143,9 @@ def main() -> None:
                                   + ("" if conf >= LOW_CONFIDENCE else "  [uncertain]"))
                         else:
                             last_word, last_conf = "no model", 0.0
-                    utter_frames, silence = [], 0
+                    utter_frames, silence, n_pre = [], 0, 0
+        else:
+            pre_roll.clear()  # face lost - don't splice stale frames onto the next word
 
         hud = [
             (f"PREDICTION: {last_word.upper()}", (255, 255, 255)),
