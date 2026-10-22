@@ -372,15 +372,23 @@ def main():
     }
 
     print(f"Session plan: {word_list}  ({args.samples} samples each, session={args.session})")
+    saved_this_session = {}
     for word in word_list:
+        before = next_sample_index(DATASET_DIR / word)
         result = record_word(cap, detector, predictor, word, args.samples, args.flip, calib,
                              args.session)
+        saved_this_session[word] = next_sample_index(DATASET_DIR / word) - before
         if result == "quit":
             break
 
     cap.release()
     cv2.destroyAllWindows()
     print("\nSession finished.")
+
+    print(f"\nSession '{args.session}' summary:")
+    for word, n in saved_this_session.items():
+        note = "" if n >= args.samples else f"   <- less than {args.samples}"
+        print(f"  {word:<6} {n:>3} saved{note}")
 
 
 if __name__ == "__main__":
