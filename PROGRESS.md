@@ -4,6 +4,43 @@ Updated weekly. Newest entry on top.
 
 ---
 
+## 2026-10-22 — Week 8: first real results
+
+The Week 7 training run did 15 of 40 epochs (2026-10-15 19:00 → 10-16 06:00) before the
+laptop shut down. Best checkpoint: epoch 13. `evaluate.py` on the 60 held-out val
+samples (10 per word, never trained on):
+
+| Metric | Value |
+|---|---|
+| Overall accuracy | **48.3%** (chance = 16.7%) |
+| Viseme-group accuracy | **73.3%** |
+| Macro-F1 | 0.44 |
+
+| true \ pred | bat | cat | hat | mat | rat | sat |
+|---|---|---|---|---|---|---|
+| **bat** | 6 | 1 | 2 | 0 | 0 | 1 |
+| **cat** | 1 | 6 | 2 | 0 | 0 | 1 |
+| **hat** | 2 | 4 | 4 | 0 | 0 | 0 |
+| **mat** | 2 | 2 | 6 | 0 | 0 | 0 |
+| **rat** | 0 | 1 | 1 | 1 | 3 | 4 |
+| **sat** | 0 | 0 | 0 | 0 | 0 | 10 |
+
+**Reading it:**
+- Most mistakes stay inside the look-alike group (hat↔cat, rat→sat). That is the
+  expected viseme confusion described in PRD §8.
+- **mat is never predicted** (0/10, mostly → hat). That is a cross-group error, so it
+  is not the expected confusion. Likely cause: `collect.py` only starts recording once
+  the mouth *opens* past the threshold, so the lip closure at the start of **m**/**b**
+  is cut off. Without that closure, mat looks like hat. mat also had the lowest motion
+  score in `inspect_sample --summary`.
+- The model leans toward "sat" (rat → sat 4 times).
+
+**Caveats:** the best epoch was chosen on the same 60 val samples, so 48.3% is slightly
+optimistic. Training stopped early at epoch 15 while train accuracy was still rising
+(68%), so the model is under-trained.
+
+---
+
 ## 2026-10-15 — Week 7: second recording sitting + full training run started
 
 **Done:**
