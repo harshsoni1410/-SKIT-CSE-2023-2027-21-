@@ -49,6 +49,11 @@ gets rejected. Tested the JS logic (6 cases) and added it to `docs/preprocessing
 before retraining. Until then the current model (trained without pre-roll) sees slightly
 different input in the live demo.
 
+**`train.py --resume`:** an interrupted run can now continue from its best checkpoint
+instead of starting over. It appends to `training_log.csv` and keeps the earlier best
+score, so a worse epoch can't overwrite a good checkpoint. Tested on synthetic data
+(2 epochs, then resumed to 4).
+
 **Next:** re-record 2 sittings with pre-roll (bat/mat should now show the closure in
 `inspect_sample.py --all`), then retrain overnight with the laptop kept on.
 
