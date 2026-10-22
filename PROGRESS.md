@@ -39,6 +39,19 @@ samples (10 per word, never trained on):
 optimistic. Training stopped early at epoch 15 while train accuracy was still rising
 (68%), so the model is under-trained.
 
+**Fix for the mat problem: pre-roll.** All three capture loops (`collect.py`,
+`demo/predict_live.py`, the web UI's `speechCapture.js`) now keep the last 5 frames from
+*before* the mouth opens and add them to the front of each utterance, so the b/m lip
+closure is captured. The "too short" check counts only spoken frames, so a blink still
+gets rejected. Tested the JS logic (6 cases) and added it to `docs/preprocessing-parity.md`.
+
+⚠️ **The current dataset was recorded without pre-roll**, so it has to be recorded again
+before retraining. Until then the current model (trained without pre-roll) sees slightly
+different input in the live demo.
+
+**Next:** re-record 2 sittings with pre-roll (bat/mat should now show the closure in
+`inspect_sample.py --all`), then retrain overnight with the laptop kept on.
+
 ---
 
 ## 2026-10-15 — Week 7: second recording sitting + full training run started
