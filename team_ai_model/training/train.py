@@ -17,6 +17,9 @@ Usage:
     # pipeline smoke test, no dataset needed
     python -m team_ai_model.training.train --synthetic --epochs 2
 
+    # a run got cut off (laptop slept / shut down)? continue it up to --epochs total
+    python -m team_ai_model.training.train --epochs 40 --augment-factor 2 --resume
+
 Training augments ONLY the training split (flip / time-warp / brightness / contrast /
 shift, x[1+factor]), uses class weights for imbalance, ReduceLROnPlateau + EarlyStopping
 on val_accuracy. Default architecture is cnn_lstm (BiLSTM over frame order - see
@@ -34,6 +37,7 @@ Outputs:
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 from pathlib import Path
@@ -62,6 +66,15 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_DIR = REPO_ROOT / "team_ai_model" / "model"
 OUTPUT_DIR = REPO_ROOT / "team_ai_model" / "outputs"
 WEIGHTS_PATH = MODEL_DIR / "model_weights.h5"
+TRAINING_LOG = OUTPUT_DIR / "training_log.csv"
+
+
+def read_training_log() -> list[dict]:
+    """Rows of training_log.csv (one per finished epoch), or [] if there is none."""
+    if not TRAINING_LOG.exists():
+        return []
+    with TRAINING_LOG.open(newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
 
 
 def plot_history(history: dict, path: Path) -> None:
@@ -98,6 +111,9 @@ def main() -> None:
                     help="soften one-hot targets a little (helps with visually close classes)")
     ap.add_argument("--synthetic", action="store_true",
                     help="train on generated noise (pipeline smoke test, no dataset)")
+    ap.add_argument("--resume", action="store_true",
+                    help="continue an interrupted run from its best checkpoint, up to --epochs "
+                         "in total (use the same data / --augment-factor / --seed as before)")
     args = ap.parse_args()
 
     # stdout is block-buffered when redirected to a file; keep epoch lines live
@@ -151,17 +167,36 @@ def main() -> None:
                 save_class_names(class_names)
                 self._mtime = mtime
 
-    model = compile_model(
-        build_model(num_classes, architecture=args.architecture),
-        learning_rate=args.lr,
-        label_smoothing=args.label_smoothing,
-    )
+    initial_epoch, best_so_far = 0, None
+    if args.resume:
+        log_rows = read_training_log()
+        if not WEIGHTS_PATH.exists() or not log_rows:
+            sys.exit("--resume: no checkpoint / training_log.csv to resume from - run without it")
+        saved_names = json.loads((MODEL_DIR / "class_names.json").read_text(encoding="utf-8"))
+        if saved_names != class_names:
+            sys.exit(f"--resume: checkpoint is for {saved_names}, dataset has {class_names}")
+        initial_epoch = len(log_rows)
+        best_so_far = max(float(r["val_accuracy"]) for r in log_rows if r.get("val_accuracy"))
+        if initial_epoch >= args.epochs:
+            sys.exit(f"--resume: already did {initial_epoch} epochs - raise --epochs to train more")
+        # the checkpoint is the BEST epoch so far (save_best_only), not necessarily the last
+        model = tf.keras.models.load_model(WEIGHTS_PATH)
+        print(f"[resume] from {WEIGHTS_PATH.name}: {initial_epoch} epochs done, "
+              f"best val_accuracy {best_so_far:.3f} -> continuing to epoch {args.epochs}")
+    else:
+        model = compile_model(
+            build_model(num_classes, architecture=args.architecture),
+            learning_rate=args.lr,
+            label_smoothing=args.label_smoothing,
+        )
     model.summary()
 
     callbacks = [
         tf.keras.callbacks.ModelCheckpoint(
             str(WEIGHTS_PATH), monitor="val_accuracy", mode="max",
             save_best_only=True, save_weights_only=False, verbose=1,
+            # on --resume, only overwrite the checkpoint if we beat the earlier best
+            initial_value_threshold=best_so_far,
         ),
         tf.keras.callbacks.EarlyStopping(
             monitor="val_accuracy", mode="max", patience=15, restore_best_weights=True,
@@ -181,20 +216,26 @@ def main() -> None:
     # gets stopped early still leaves its numbers behind
     callbacks += [
         SaveClassNamesWithCheckpoint(),
-        tf.keras.callbacks.CSVLogger(str(OUTPUT_DIR / "training_log.csv")),
+        tf.keras.callbacks.CSVLogger(str(TRAINING_LOG), append=args.resume),
     ]
 
     hist = model.fit(
         X_tr, y_tr_oh,
         validation_data=val_data,
         epochs=args.epochs,
+        initial_epoch=initial_epoch,
         batch_size=args.batch,
         callbacks=callbacks,
         class_weight=class_weight,
         verbose=2,
     )
 
-    history = {k: [float(v) for v in vals] for k, vals in hist.history.items()}
+    if args.resume:
+        # hist only has the resumed epochs - take the whole run from the CSV instead
+        rows = read_training_log()
+        history = {k: [float(r[k]) for r in rows] for k in rows[0] if k != "epoch"}
+    else:
+        history = {k: [float(v) for v in vals] for k, vals in hist.history.items()}
     (OUTPUT_DIR / "history.json").write_text(json.dumps(history, indent=2), encoding="utf-8")
     try:
         plot_history(history, OUTPUT_DIR / "history.png")
