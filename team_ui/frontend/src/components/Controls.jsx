@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 export default function Controls({
   cameraOn,
   calibrated,
@@ -7,6 +9,17 @@ export default function Controls({
   onCalibrate,
   onClear,
 }) {
+  // press C to (re-)calibrate, same key as collect.py / predict_live.py,
+  // so you don't have to look away from the camera to find the button
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key?.toLowerCase() !== 'c' || e.ctrlKey || e.metaKey || e.altKey) return
+      if (cameraOn && !calibrating) onCalibrate()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [cameraOn, calibrating, onCalibrate])
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <button
@@ -29,6 +42,7 @@ export default function Controls({
         className="rounded-lg border border-line px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-card disabled:cursor-not-allowed disabled:opacity-40"
       >
         {calibrating ? 'Calibrating…' : calibrated ? 'Re-calibrate' : 'Calibrate'}
+        {!calibrating && <span className="ml-1.5 text-xs text-slate-500">(C)</span>}
       </button>
       <button
         onClick={onClear}
