@@ -54,6 +54,9 @@ instead of starting over. It appends to `training_log.csv` and keeps the earlier
 score, so a worse epoch can't overwrite a good checkpoint. Tested on synthetic data
 (2 epochs, then resumed to 4).
 
+- (Dipesh) Web UI: press **C** to calibrate, the same key as the Python tools, with a
+  "(C)" hint on the button.
+
 **Next:** re-record 2 sittings with pre-roll (bat/mat should now show the closure in
 `inspect_sample.py --all`), then retrain overnight with the laptop kept on.
 
