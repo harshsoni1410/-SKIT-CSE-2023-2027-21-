@@ -56,6 +56,8 @@ score, so a worse epoch can't overwrite a good checkpoint. Tested on synthetic d
 
 - (Dipesh) Web UI: press **C** to calibrate, the same key as the Python tools, with a
   "(C)" hint on the button.
+- (Dhruv) `collect.py` prints a per-word summary at the end of each session and marks
+  words that got fewer than `--samples`. Useful for the re-recording sittings.
 
 **Next:** re-record 2 sittings with pre-roll (bat/mat should now show the closure in
 `inspect_sample.py --all`), then retrain overnight with the laptop kept on.
