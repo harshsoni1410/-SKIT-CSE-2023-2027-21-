@@ -17,6 +17,7 @@ npm-debug.log*
 team_video_processing/dataset/**/*.npy
 team_video_processing/dataset/**/*.mp4
 team_video_processing/dataset/**/*.avi
+team_video_processing/dataset_archive/**/*.npy
 team_video_processing/_inspect_*.png
 team_ai_model/model/*.h5
 team_ai_model/model/*.dat
