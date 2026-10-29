@@ -226,14 +226,35 @@ def main() -> None:
         tf.keras.callbacks.CSVLogger(str(TRAINING_LOG), append=args.resume),
     ]
 
+    class ArrayBatches(tf.keras.utils.Sequence):
+        """Hand the training arrays to Keras one batch at a time. Passing the numpy arrays
+        straight to fit() makes TF copy the whole augmented set into one tensor first, which
+        doubles RAM use - that ran the 8 GB laptop out of memory once training moved to GPU
+        and the augmented set grew. Class weights go in as per-sample weights."""
+
+        def __init__(self, x, y, weights, batch, seed):
+            self.x, self.y, self.w, self.batch = x, y, weights, batch
+            self.rng = np.random.default_rng(seed)
+            self.order = self.rng.permutation(len(x))
+
+        def __len__(self):
+            return int(np.ceil(len(self.x) / self.batch))
+
+        def __getitem__(self, i):
+            idx = np.sort(self.order[i * self.batch:(i + 1) * self.batch])
+            return self.x[idx], self.y[idx], self.w[idx]
+
+        def on_epoch_end(self):
+            self.order = self.rng.permutation(len(self.x))
+
+    sample_weight = np.array([class_weight[c] for c in y_tr], dtype="float32")
     hist = model.fit(
-        X_tr, y_tr_oh,
+        ArrayBatches(X_tr, y_tr_oh, sample_weight, args.batch, args.seed),
         validation_data=val_data,
+        validation_batch_size=args.batch,  # default would be 32, too big for a 4 GB laptop GPU
         epochs=args.epochs,
         initial_epoch=initial_epoch,
-        batch_size=args.batch,
         callbacks=callbacks,
-        class_weight=class_weight,
         verbose=2,
     )
 
