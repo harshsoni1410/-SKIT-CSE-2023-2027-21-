@@ -43,6 +43,21 @@ def count_sessions(word_dir: Path) -> int:
     return len(tags)
 
 
+def files_by_session(word_dir: Path) -> dict[str, set[str]]:
+    """session tag -> names of the .npy files saved in that session (from session_log.csv)."""
+    log = word_dir / "session_log.csv"
+    out: dict[str, set[str]] = {}
+    if not log.exists():
+        return out
+    with log.open(newline="", encoding="utf-8") as f:
+        rows = list(csv.reader(f))[1:]  # skip the header row
+    for r in rows:
+        if len(r) > 2 and r[1] == "saved":
+            tag = r[3] if len(r) > 3 and r[3] else "untagged"
+            out.setdefault(tag, set()).add(r[2])
+    return out
+
+
 def summarize_dataset() -> None:
     """Print per-word sample count + how many samples look too dark or static."""
     word_dirs = sorted(d for d in DATASET_DIR.iterdir() if d.is_dir() and any(d.glob("*.npy")))
@@ -84,6 +99,7 @@ def main() -> None:
     ap.add_argument("--show", action="store_true", help="also open a window (else just save the PNG)")
     ap.add_argument("--summary", action="store_true",
                     help="print sample count and dark/static counts for every word (no files written)")
+    ap.add_argument("--session", help="with --all: only samples recorded in this session tag, e.g. lamp-2")
     args = ap.parse_args()
 
     if args.summary:
@@ -95,6 +111,9 @@ def main() -> None:
     if args.all:
         word_dir = DATASET_DIR / args.all
         files = sorted(word_dir.glob("*.npy"))
+        if args.session:
+            keep = files_by_session(word_dir).get(args.session, set())
+            files = [f for f in files if f.name in keep]
         if not files:
             sys.exit(f"no samples in {word_dir}")
         rows = []
