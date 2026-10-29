@@ -16,3 +16,9 @@ export const HISTORY_LIMIT = 10
 // If the top two words are closer than this, the UI flags it as a "close call"
 // (e.g. bat vs mat - visually similar on the lips).
 export const CLOSE_CALL_MARGIN = 0.1
+
+// Words that look almost the same on the lips (same "viseme" group) - PRD.md section 8.
+export const LOOK_ALIKE_GROUPS = [
+  ['bat', 'mat'],
+  ['cat', 'hat', 'rat', 'sat'],
+]

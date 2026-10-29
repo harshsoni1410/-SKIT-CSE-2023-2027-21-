@@ -1,4 +1,4 @@
-import { CONFIDENCE_THRESHOLD, CLOSE_CALL_MARGIN } from '../constants.js'
+import { CONFIDENCE_THRESHOLD, CLOSE_CALL_MARGIN, LOOK_ALIKE_GROUPS } from '../constants.js'
 
 // Big predicted word + confidence bar. Below the threshold we show
 // "Prediction uncertain" and keep the top guess small (DESIGN.md rule).
@@ -20,6 +20,12 @@ export default function PredictionCard({ prediction, predicting = false, vocab =
   // top two guesses nearly tied -> the model couldn't separate two look-alike words
   const closeCall = ranked && ranked.length >= 2 && ranked[0].p - ranked[1].p < CLOSE_CALL_MARGIN
 
+  // the other words in the predicted word's look-alike group, e.g. bat -> [mat]
+  const lookAlikes = prediction
+    ? (LOOK_ALIKE_GROUPS.find((g) => g.includes(prediction.word)) || []).filter((w) => w !== prediction.word)
+    : []
+
+
   return (
     <div>
       <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -38,9 +44,17 @@ export default function PredictionCard({ prediction, predicting = false, vocab =
           </p>
         </div>
       ) : (
-        <p className="text-5xl font-bold uppercase tracking-tight text-white">
-          {prediction.word}
-        </p>
+        <div>
+          <p className="text-5xl font-bold uppercase tracking-tight text-white">
+            {prediction.word}
+          </p>
+          {lookAlikes.length > 0 && (
+            <p className="mt-1 text-xs text-slate-500">
+              looks similar on the lips:{' '}
+              <span className="uppercase text-slate-400">{lookAlikes.join(', ')}</span>
+            </p>
+          )}
+        </div>
       )}
 
       <div className="mt-4">
