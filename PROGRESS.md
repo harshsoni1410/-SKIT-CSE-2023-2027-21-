@@ -4,6 +4,26 @@ Updated weekly. Newest entry on top.
 
 ---
 
+## 2026-10-29 — Week 9: pre-roll dataset + GPU training
+
+**Done:**
+- **Dataset re-recorded with pre-roll:** 2 sittings with different lighting (`day-1`,
+  `lamp-2`), 50 samples per word, 300 in total, 0 dark / 0 static. Sample montages of
+  mat and bat now show the closed lips in the first frames, which were missing before.
+  The 300 old samples (no pre-roll) were moved to
+  `team_video_processing/dataset_archive/v1_no_preroll/`, not deleted.
+- **GPU training:** the laptop's RTX 3050 was never used because TensorFlow found no CUDA
+  libraries. `requirements-gpu.txt` installs CUDA 11.8 + cuDNN 8.9 into the venv only, and
+  `cuda_dlls.py` lets TensorFlow find them. One epoch now takes ~36 s instead of ~10 min.
+- `train.py` now feeds batches one at a time, so the augmented set doesn't need a second
+  full copy in RAM (the first GPU run ran out of memory), and uses batch 8 for validation
+  too.
+- New training run started (40 epochs, augment x2).
+
+**Next:** evaluate the new model and compare with the Week 8 baseline (48.3%, mat 0/10).
+
+---
+
 ## 2026-10-22 — Week 8: first real results
 
 The Week 7 training run did 15 of 40 epochs (2026-10-15 19:00 → 10-16 06:00) before the
