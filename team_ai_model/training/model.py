@@ -31,6 +31,12 @@ comparison/ablation and for cases where speed matters more than that distinction
 
 from __future__ import annotations
 
+# must run before tensorflow is imported so TF can find the pip-installed CUDA DLLs
+try:
+    from . import cuda_dlls  # noqa: F401
+except ImportError:
+    import cuda_dlls  # noqa: F401  (running this file directly)
+
 import tensorflow as tf
 from tensorflow.keras import layers, models
 

@@ -153,6 +153,13 @@ def main() -> None:
 
     import tensorflow as tf
 
+    gpus = tf.config.list_physical_devices("GPU")
+    for g in gpus:
+        # take VRAM as needed instead of all 4 GB up front (laptop GPU is shared with the display)
+        tf.config.experimental.set_memory_growth(g, True)
+    print("[device] " + (f"GPU: {', '.join(g.name for g in gpus)}" if gpus
+                         else "CPU only - no CUDA GPU found (see requirements-gpu.txt)"))
+
     class SaveClassNamesWithCheckpoint(tf.keras.callbacks.Callback):
         """Write class_names.json only when ModelCheckpoint has written new weights, so a
         run stopped before its first checkpoint can't pair new names with old weights."""

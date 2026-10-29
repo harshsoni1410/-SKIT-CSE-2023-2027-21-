@@ -36,3 +36,6 @@ team_ai_model/outputs/*.csv
 Thumbs.db
 .vscode/
 .idea/
+
+# ---- archived models/results (local only) ----
+team_ai_model/model_archive/
