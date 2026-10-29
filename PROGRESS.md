@@ -19,6 +19,10 @@ Updated weekly. Newest entry on top.
   full copy in RAM (the first GPU run ran out of memory), and uses batch 8 for validation
   too.
 - New training run started (40 epochs, augment x2).
+- (Dipesh) Web UI: a "looks similar on the lips: MAT" line under the predicted word, from a
+  new `LOOK_ALIKE_GROUPS` list (bat/mat, cat/hat/rat/sat).
+- (Dhruv) `inspect_sample.py --all WORD --session TAG` shows only the samples from one
+  sitting, so each lighting condition can be checked on its own.
 
 **Next:** evaluate the new model and compare with the Week 8 baseline (48.3%, mat 0/10).
 
