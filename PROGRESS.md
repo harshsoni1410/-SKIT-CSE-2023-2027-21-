@@ -24,7 +24,24 @@ Updated weekly. Newest entry on top.
 - (Dhruv) `inspect_sample.py --all WORD --session TAG` shows only the samples from one
   sitting, so each lighting condition can be checked on its own.
 
-**Next:** evaluate the new model and compare with the Week 8 baseline (48.3%, mat 0/10).
+**Results of the new run** (40 epochs on GPU, ~11-36 s per epoch; 60 held-out val samples):
+
+| Metric | Week 8 (no pre-roll, CPU, 15 epochs) | **Week 9 (pre-roll, GPU, 40 epochs)** |
+|---|---|---|
+| Overall accuracy | 48.3% | **81.7%** |
+| Viseme-group accuracy | 73.3% | **90.0%** |
+| Macro-F1 | 0.44 | **0.82** |
+| mat | 0/10 | **8/10** (the 2 misses -> bat, same look-alike group) |
+| per word | bat 6, cat 6, hat 4, mat 0, rat 3, sat 10 | bat 7, cat 6, hat 9, mat 8, rat 10, sat 9 |
+
+The mat -> hat cross-group error from Week 8 is gone; the remaining mat errors are the
+expected bat/mat confusion. **Caveats:** several things changed at once (pre-roll, new
+recordings, 40 instead of 15 epochs), so the gain can't be credited to pre-roll alone;
+the best epoch was still picked on the same 60 val samples; and val accuracy was still
+rising at epoch 40.
+
+**Next:** continue training with `--resume`, add a separate test split, and record more
+sittings / other speakers.
 
 ---
 
