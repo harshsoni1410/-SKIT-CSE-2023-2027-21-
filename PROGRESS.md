@@ -4,6 +4,47 @@ Updated weekly. Newest entry on top.
 
 ---
 
+## 2026-11-06 — Week 10: separate test split + retrain
+
+Done on Friday 6 Nov; no work happened on the usual Thursday (5 Nov). No changes from
+Dhruv or Dipesh this week.
+
+**Done:**
+- **Separate test split:** `train_val_test_split` in `dataset.py` keeps 60 samples (10 per
+  word) out of training and out of best-epoch selection. The split is now train 192 /
+  val 48 / test 60. `evaluate.py` uses the test split by default (`--split val` and
+  `--split all` still work).
+- **Fresh training run** (not `--resume`, because the old model had already seen these
+  samples): cnn_lstm, augment x2, up to 80 epochs on GPU. Early stopping ended it at epoch
+  50; best epoch 35.
+- The Week 9 model and its results were kept in `team_ai_model/model_archive/v2_preroll_40ep/`.
+- The first run this week ran out of memory in epoch 1. The second run finished after
+  stopping a backend server left running since 31 Oct, but other load on the laptop may
+  also have changed, so that server isn't proven to be the cause.
+
+**Results** (best epoch 35; 60 test samples the model never used):
+
+| Metric | Week 9 (val, 240 train samples) | **Week 10 (test, 192 train samples)** |
+|---|---|---|
+| Overall accuracy | 81.7% | **75.0%** |
+| Viseme-group accuracy | 90.0% | **88.3%** |
+| Macro-F1 | 0.82 | **0.75** |
+| per word (of 10) | bat 7, cat 6, hat 9, mat 8, rat 10, sat 9 | bat 5, cat 7, hat 8, mat 8, rat 9, sat 8 |
+
+Val accuracy for this run was 85.4% on 48 samples, so the test number is what to quote.
+bat is now the weakest word: 3 misses went to mat (expected look-alike), 2 to hat (not).
+**Caveats:** the two columns are the same 60 samples but not a clean comparison: the Week 9
+number was picked on those samples, and the Week 10 model had 20% fewer training samples.
+So the drop can't be split between those two causes. With only 60 samples the 75.0% is
+good to roughly +/-11 points. All data is still one speaker, so this says nothing yet about
+other people. Train accuracy reached 98% against 75% on test, which points to overfitting;
+more data should help more than more epochs.
+
+**Next:** record more sittings and other speakers, then retrain from scratch (new samples
+change the split, so don't use `--resume`).
+
+---
+
 ## 2026-10-29 — Week 9: pre-roll dataset + GPU training
 
 **Done:**
