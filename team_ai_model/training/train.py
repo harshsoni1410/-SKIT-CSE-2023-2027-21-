@@ -52,12 +52,12 @@ sys.path.insert(0, str(_REPO / "team_video_processing"))
 if __package__:
     from .model import build_model, compile_model
     from .dataset import (
-        load_dataset, make_synthetic, train_val_split, to_onehot, save_class_names,
+        load_dataset, make_synthetic, train_val_test_split, to_onehot, save_class_names,
     )
 else:
     from team_ai_model.training.model import build_model, compile_model
     from team_ai_model.training.dataset import (
-        load_dataset, make_synthetic, train_val_split, to_onehot, save_class_names,
+        load_dataset, make_synthetic, train_val_test_split, to_onehot, save_class_names,
     )
 
 from augment import augment_batch  # noqa: E402  (team_video_processing/augment.py)
@@ -101,6 +101,8 @@ def main() -> None:
     ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--lr", type=float, default=5e-4)
     ap.add_argument("--val-frac", type=float, default=0.2)
+    ap.add_argument("--test-frac", type=float, default=0.2,
+                    help="share of samples kept out of training entirely, for evaluate.py")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--augment-factor", type=int, default=5,
                     help="augmented copies added per training sample (0 = off)")
@@ -133,8 +135,9 @@ def main() -> None:
     print(f"classes ({num_classes}): {class_names}")
     print(f"samples: {len(X)}  input shape: {X.shape[1:]}")
 
-    X_tr, y_tr, X_val, y_val = train_val_split(X, y, args.val_frac, args.seed)
-    print(f"train: {len(X_tr)}   val: {len(X_val)}")
+    X_tr, y_tr, X_val, y_val, X_test, _ = train_val_test_split(
+        X, y, args.val_frac, args.test_frac, args.seed)
+    print(f"train: {len(X_tr)}   val: {len(X_val)}   test: {len(X_test)} (not used here)")
 
     # augment ONLY the training set (val stays real). Augmentation is what makes a
     # small self-collected dataset usable - flips / brightness / shifts multiply it.

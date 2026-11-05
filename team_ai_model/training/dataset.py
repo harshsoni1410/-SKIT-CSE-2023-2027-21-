@@ -87,6 +87,23 @@ def train_val_split(X: np.ndarray, y: np.ndarray, val_frac: float = 0.2, seed: i
     return X[train_idx], y[train_idx], X[val_idx], y[val_idx]
 
 
+def train_val_test_split(X: np.ndarray, y: np.ndarray, val_frac: float = 0.2,
+                         test_frac: float = 0.2, seed: int = 42
+                         ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                    np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Stratified three-way split. The test samples are taken out first and play no part in
+    training or in picking the best epoch (that is what val is for), so accuracy on them
+    is not tuned to them. val_frac is a share of what remains after the test split.
+
+    The split depends on the sample list: after recording new samples the test set
+    changes, so retrain from scratch instead of using --resume.
+    """
+    X_rest, y_rest, X_test, y_test = train_val_split(X, y, test_frac, seed)
+    X_tr, y_tr, X_val, y_val = train_val_split(X_rest, y_rest, val_frac, seed)
+    return X_tr, y_tr, X_val, y_val, X_test, y_test
+
+
 def to_onehot(y: np.ndarray, num_classes: int) -> np.ndarray:
     out = np.zeros((len(y), num_classes), dtype="float32")
     out[np.arange(len(y)), y] = 1.0
