@@ -4,6 +4,25 @@ Updated weekly. Newest entry on top.
 
 ---
 
+## 2026-11-20 — Week 12: project moved + report cleanup
+
+No work was pushed in Week 11 (9–15 Nov).
+
+**Done:**
+- Moved the project folder to `C:\Projects\`, off OneDrive (the `venv/` corruption risk
+  noted since Week 1).
+- Removed the Week 11 and Week 12 reports that the scheduled workflow generated while
+  nothing had been pushed (both showed 0 commits).
+- `inspect_sample.py --all WORD --session TAG` saves its montage as
+  `_inspect_WORD_TAG.png`, so a per-sitting montage no longer overwrites the full one;
+  usage example added to the docstring.
+- Web UI footer: removed the stale "Week 6" label.
+
+**Next:** unchanged from Week 10. Record more sittings and other speakers, then retrain
+from scratch.
+
+---
+
 ## 2026-11-06 — Week 10: separate test split + retrain
 
 Done on Friday 6 Nov; no work happened on the usual Thursday (5 Nov). No changes from
