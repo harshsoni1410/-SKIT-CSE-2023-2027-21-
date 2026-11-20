@@ -133,7 +133,7 @@ export default function App() {
       </main>
 
       <footer className="border-t border-line px-5 py-3 text-xs text-slate-600">
-        Week 6 · webcam → lip detection → speaking capture → backend prediction
+        webcam → lip detection → speaking capture → backend prediction
       </footer>
     </div>
   )
