@@ -8,6 +8,7 @@ dark, or barely show lips, no model will learn from them.
     python team_video_processing/inspect_sample.py                       # a random sample
     python team_video_processing/inspect_sample.py dataset/bat/003.npy   # a specific one
     python team_video_processing/inspect_sample.py --all bat             # 12 samples of one word
+    python team_video_processing/inspect_sample.py --all bat --session lamp-2  # one sitting only
     python team_video_processing/inspect_sample.py --summary             # quality table, all words
 
 Saves a PNG montage (22 frames in a grid) next to this script, and also tries to show it.
@@ -122,7 +123,8 @@ def main() -> None:
         for f in files[::step][:12]:
             rows.append(montage(np.load(f), cols=22))
         img = np.vstack(rows)
-        out = HERE / f"_inspect_{args.all}.png"
+        suffix = f"_{args.session}" if args.session else ""
+        out = HERE / f"_inspect_{args.all}{suffix}.png"
     else:
         if args.path:
             path = Path(args.path)
