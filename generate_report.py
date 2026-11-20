@@ -51,12 +51,15 @@ def get_repo_info():
     return repo_name, branch_name
 
 
-def get_git_metrics(interval="weekly"):
+def get_git_metrics(interval="weekly", report_date=None, since_override=None):
     """
     Parses Git commit logs.
     Supported intervals: 'weekly', 'monthly', 'final'
+    report_date: last day of the window (default: today). Used to regenerate a past
+    week's report; commits after this date are excluded.
+    since_override: first day of the window, instead of report_date - 6 / - 30.
     """
-    today = datetime.date.today()
+    today = report_date or datetime.date.today()
     # %aN + --use-mailmap: honour .mailmap so one person's different git names/emails
     # (e.g. a GitHub noreply address) collapse into a single canonical author.
     git_args = ['git', 'log', '--no-merges', '--use-mailmap',
@@ -77,6 +80,15 @@ def get_git_metrics(interval="weekly"):
         scope_title = f"Last 30 Days (Since {since_date})"
     else:
         scope_title = "Complete Project Lifecycle (All Commits)"
+
+    if since_override and interval != "final":
+        since_date = since_override.strftime("%Y-%m-%d")
+        git_args = [a for a in git_args if not a.startswith("--since=")]
+        git_args.append(f"--since={since_date} 00:00:00")
+    if report_date:
+        git_args.append(f"--until={report_date.strftime('%Y-%m-%d')} 23:59:59")
+        if interval != "final":
+            scope_title = f"{since_date} to {report_date.strftime('%Y-%m-%d')}"
 
     try:
         raw_output = subprocess.check_output(git_args, encoding='utf-8', errors='replace')
@@ -177,16 +189,17 @@ def create_charts(students, timeline_activity, interval):
     return Image(img_buffer, width=500, height=170)
 
 
-def generate_pdf(interval="weekly"):
+def generate_pdf(interval="weekly", report_date=None, since_override=None, remarks=None):
     repo_name, branch_name = get_repo_info()
-    students, timeline_activity, student_logs, scope_title = get_git_metrics(interval)
+    students, timeline_activity, student_logs, scope_title = get_git_metrics(
+        interval, report_date, since_override)
 
     if students is None:
         return
 
-    date_stamp = datetime.date.today().strftime("%Y-%m-%d")
+    date_stamp = (report_date or datetime.date.today()).strftime("%Y-%m-%d")
 
-    week_num = get_week_number()
+    week_num = get_week_number(report_date)
     if interval == "weekly":
         report_title = f"Weekly Progress Report (Form-3) - Week {week_num}"
         doc_name = f"{repo_name}_Week-{week_num:02d}_Weekly_Progress_Report_Form-3_{date_stamp}.pdf"
@@ -287,7 +300,7 @@ def generate_pdf(interval="weekly"):
                 f"{len(data['active_days'])} days"
             ])
     else:
-        table_data.append(["No commits found in this period. Run with 'final' to see all commits.", "-", "-", "-", "-", "-"])
+        table_data.append(["No commits found in this period.", "", "", "", "", ""])
 
     table = Table(table_data, colWidths=[120, 80, 80, 80, 80, 100])
     table.setStyle(TableStyle([
@@ -301,7 +314,7 @@ def generate_pdf(interval="weekly"):
         ('TOPPADDING', (0, 0), (-1, -1), 3.5),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8FAFC")]),
-    ]))
+    ] + ([] if students else [('SPAN', (0, 1), (-1, 1)), ('ALIGN', (0, 1), (-1, 1), 'CENTER')])))
     story.append(table)
     story.append(Spacer(1, 6))
 
@@ -367,6 +380,13 @@ def generate_pdf(interval="weekly"):
             student_section.append(Spacer(1, 5))
             story.append(KeepTogether(student_section))
 
+    # 5b. Optional remarks (e.g. why a week has no commits)
+    if remarks:
+        story.append(Paragraph("4. Remarks", section_style))
+        for line in remarks:
+            story.append(Paragraph(html.escape(line), msg_style))
+            story.append(Spacer(1, 2))
+
     # 6. Symmetrical Signatures
     story.append(Spacer(1, 16))
 
@@ -402,5 +422,19 @@ def generate_pdf(interval="weekly"):
 
 
 if __name__ == "__main__":
-    chosen_interval = sys.argv[1].lower() if len(sys.argv) > 1 else "weekly"
-    generate_pdf(chosen_interval)
+    import argparse
+
+    def _date(s):
+        return datetime.datetime.strptime(s, "%Y-%m-%d").date()
+
+    parser = argparse.ArgumentParser(description="Generate the Form-3 progress report PDF.")
+    parser.add_argument("interval", nargs="?", default="weekly",
+                        type=str.lower, choices=["weekly", "monthly", "final"])
+    parser.add_argument("--date", type=_date,
+                        help="last day of the report window, YYYY-MM-DD (default: today)")
+    parser.add_argument("--since", type=_date,
+                        help="first day of the report window, YYYY-MM-DD")
+    parser.add_argument("--remarks", action="append",
+                        help="a line for the Remarks section (repeat for more lines)")
+    args = parser.parse_args()
+    generate_pdf(args.interval, args.date, args.since, args.remarks)

@@ -17,6 +17,11 @@ No work was pushed in Week 11 (9–15 Nov).
   `_inspect_WORD_TAG.png`, so a per-sitting montage no longer overwrites the full one;
   usage example added to the docstring.
 - Web UI footer: removed the stale "Week 6" label.
+- `generate_report.py`: `--date` / `--since` regenerate a past week's report over that
+  week's own window, and `--remarks` adds a Remarks section (e.g. why a week has no
+  commits). Used to regenerate Week 11 (7–12 Nov, 0 commits) with a remark instead of
+  an empty report. The duplicate bot-generated Week 10 report (5 Nov) was removed; the
+  6 Nov one covers the same commits.
 
 **Next:** unchanged from Week 10. Record more sittings and other speakers, then retrain
 from scratch.
