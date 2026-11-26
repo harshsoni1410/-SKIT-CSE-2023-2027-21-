@@ -1,6 +1,7 @@
 import { CONFIDENCE_THRESHOLD } from '../constants.js'
+import { downloadHistoryCsv } from '../lib/historyCsv.js'
 
-// Last ~10 predictions: word, confidence, time.
+// Last ~10 predictions: word, confidence, time. "Export CSV" saves the whole history.
 export default function HistoryList({ history = [] }) {
   // average confidence of the predictions shown below (0 if there are none)
   const shown = history.slice(0, 10)
@@ -10,9 +11,18 @@ export default function HistoryList({ history = [] }) {
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-        History
-      </p>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">History</p>
+        {history.length > 0 && (
+          <button
+            type="button"
+            onClick={() => downloadHistoryCsv(history)}
+            className="rounded border border-line px-2 py-0.5 text-xs text-slate-400 hover:text-slate-200"
+          >
+            Export CSV
+          </button>
+        )}
+      </div>
 
       {history.length === 0 ? (
         <p className="text-sm text-slate-600">No predictions yet.</p>
