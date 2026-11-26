@@ -21,6 +21,10 @@ in 21–26 Nov. This week's report was generated locally on Friday 27 Nov.
   it never trained on. Existing logs still read fine (their samples count as one
   "untagged" speaker). Tested on a copy of `bat/session_log.csv` and a new log; no
   recording sitting was done this week.
+- (Dipesh) Web UI: **Export CSV** button on the history card saves the prediction
+  history as `lipsense-history-YYYY-MM-DD.csv` (time, word, confidence, uncertain),
+  oldest first. CSV logic is in `src/lib/historyCsv.js`; tested on sample entries,
+  including quoting, and `vite build` passes.
 
 **Next:** unchanged. Record more sittings and other speakers, then retrain from scratch.
 
