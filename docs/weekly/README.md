@@ -19,7 +19,24 @@ pip install reportlab matplotlib          # already in requirements.txt
 python generate_report.py weekly          # last 7 days
 python generate_report.py monthly         # last 30 days
 python generate_report.py final           # whole project
+
+# a past week, over that week's own window (Thursday to Thursday)
+python generate_report.py weekly --since 2026-11-07 --date 2026-11-12
+
+# add a Remarks section (repeat --remarks for more lines)
+python generate_report.py weekly --remarks "No changes from Dhruv this week."
 ```
+
+- `--date YYYY-MM-DD`: last day of the window (default: today). The week number and
+  the filename date come from it; "Generated On" is always the real date.
+- `--since YYYY-MM-DD`: first day of the window. Use the day after the previous
+  report, so commits already in that report are not counted twice.
+- `--remarks TEXT`: a line under "4. Remarks", e.g. why a week has no commits.
+
+**If the Thursday workflow did not run** (it did not on 2026-11-26), generate the report
+locally with the commands above, move the PDF into `weekly_reports/`, commit and push.
+GitHub's scheduled runs can be delayed by hours or skipped; `Run workflow` in the
+Actions tab also works.
 
 The PDF is written to the repo root (git-ignored there); the workflow moves it into
 `weekly_reports/`. The filename carries the project week number, e.g.
