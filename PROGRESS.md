@@ -4,6 +4,22 @@ Updated weekly. Newest entry on top.
 
 ---
 
+## 2026-11-27 — Week 13: report tooling fixes
+
+The scheduled report workflow did not run on Thursday 26 Nov, and no commits were made
+in 21–26 Nov. This week's report was generated locally on Friday 27 Nov.
+
+**Done:**
+- `generate_report.py`: `--since` without `--date` showed the default start date in the
+  "Evaluation Window" line; a custom window now always shows "from to to". Removed an
+  unused import.
+- `docs/weekly/README.md`: documented `--date` / `--since` / `--remarks`, and what to
+  do when the Thursday workflow does not run.
+
+**Next:** unchanged. Record more sittings and other speakers, then retrain from scratch.
+
+---
+
 ## 2026-11-20 — Week 12: project moved + report cleanup
 
 No work was pushed in Week 11 (9–15 Nov).
