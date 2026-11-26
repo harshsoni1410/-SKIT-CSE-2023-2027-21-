@@ -26,6 +26,17 @@ dataset/
 Folder name = class label. Class order = `sorted(os.listdir("dataset"))`.
 Training and demo both use this order — never hardcoded.
 
+Each word folder also has `session_log.csv` (`timestamp, event, detail, session, speaker`),
+one row per saved / rejected / undone sample. Record with both tags:
+
+```
+python team_video_processing/data_collection/collect.py --words bat,cat,hat,mat,rat,sat --samples 25 --session dhruv-1 --speaker dhruv
+python team_video_processing/inspect_sample.py --summary     # sessions + speakers per word
+```
+
+Logs written before `--speaker` existed have no 5th column; those samples (all recorded
+by Harsh) count as one "untagged" speaker.
+
 ## Responsibilities
 
 1. `collect.py` — face detect -> landmarks -> lip ROI -> speaking detection -> N frames -> save `.npy`.

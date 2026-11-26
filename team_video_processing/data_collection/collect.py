@@ -23,10 +23,13 @@ sessions (lighting/time of day/distance from camera) went into a word, since rec
 everything in one sitting makes the dataset overfit to that one sitting's conditions.
 
 Run from anywhere. Single word:
-    python team_video_processing/data_collection/collect.py --word hello --samples 20
+    python team_video_processing/data_collection/collect.py --word hello --samples 20 --speaker dhruv
 
 Multiple words in one sitting (recommended - cycles through the list automatically):
-    python team_video_processing/data_collection/collect.py --words cat,bat,hat,mat,rat,sat --samples 20
+    python team_video_processing/data_collection/collect.py --words cat,bat,hat,mat,rat,sat --samples 20 --speaker dhruv
+
+--speaker (required) names the person recording, and is saved in session_log.csv next to
+the session tag, so the model can later be tested on a speaker it never trained on.
 
 Using a phone as a webcam (DroidCam/Iriun) instead of the laptop's built-in camera -
 find the right --camera/--backend combo first with team_video_processing/list_cameras.py,
@@ -139,14 +142,19 @@ def check_quality(raw_frames: list[np.ndarray]) -> tuple[bool, str]:
     return True, "ok"
 
 
-def log_session_event(word_dir: Path, event: str, detail: str = "", session: str = "") -> None:
+def log_session_event(word_dir: Path, event: str, detail: str = "", session: str = "",
+                      speaker: str = "") -> None:
+    # Columns are read by position. Older logs have a 4-column header (no speaker);
+    # new rows are simply appended with a 5th column, and readers treat a missing
+    # speaker as "untagged".
     log_path = word_dir / "session_log.csv"
     is_new = not log_path.exists()
     with log_path.open("a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         if is_new:
-            writer.writerow(["timestamp", "event", "detail", "session"])
-        writer.writerow([datetime.now().isoformat(timespec="seconds"), event, detail, session])
+            writer.writerow(["timestamp", "event", "detail", "session", "speaker"])
+        writer.writerow([datetime.now().isoformat(timespec="seconds"), event, detail, session,
+                         speaker])
 
 
 def draw_hud(frame, lines, color=(0, 255, 0)):
@@ -157,7 +165,7 @@ def draw_hud(frame, lines, color=(0, 255, 0)):
 
 
 def record_word(cap, detector, predictor, word: str, samples: int, flip: bool,
-                calib: dict, session: str = "") -> str:
+                calib: dict, session: str = "", speaker: str = "") -> str:
     """
     Run the recording loop for a single word. `calib` is shared across words (a dict with
     closed_baseline/open_threshold/close_threshold/calib_buffer/calibrating) so calibration
@@ -261,11 +269,11 @@ def record_word(cap, detector, predictor, word: str, samples: int, flip: bool,
                             last_saved_path = out_path
                             collected = idx + 1
                             print(f"  saved {out_path.name}  ({len(utter_frames)} raw frames)")
-                            log_session_event(word_dir, "saved", out_path.name, session)
+                            log_session_event(word_dir, "saved", out_path.name, session, speaker)
                             state_text, state_color = "SAVED", (0, 255, 0)
                         else:
                             print(f"  rejected: {reason}")
-                            log_session_event(word_dir, "rejected", reason, session)
+                            log_session_event(word_dir, "rejected", reason, session, speaker)
                             state_text, state_color = "REJECTED - " + reason[:30], (0, 100, 255)
                     else:
                         print(f"  discarded short utterance ({len(utter_frames) - n_pre} frames)")
@@ -319,7 +327,7 @@ def record_word(cap, detector, predictor, word: str, samples: int, flip: bool,
                 last_saved_path.unlink()
                 collected = max(0, collected - 1)
                 print(f"deleted {last_saved_path.name}")
-                log_session_event(word_dir, "undo", last_saved_path.name, session)
+                log_session_event(word_dir, "undo", last_saved_path.name, session, speaker)
                 last_saved_path = None
             else:
                 print("nothing to undo")
@@ -340,6 +348,8 @@ def main():
     ap.add_argument("--samples", type=int, default=20, help="how many samples to collect per word")
     ap.add_argument("--session", default=datetime.now().strftime("%Y-%m-%d"),
                     help="tag for this sitting, e.g. day-lamp / evening-window")
+    ap.add_argument("--speaker", required=True,
+                    help="who is recording, e.g. harsh / dhruv / dipesh (saved in session_log.csv)")
     ap.add_argument("--camera", type=int, default=0, help="camera index")
     ap.add_argument("--backend", choices=["default", "dshow"], default="default",
                     help="OpenCV capture backend - use 'dshow' for phone-as-webcam apps "
@@ -371,12 +381,14 @@ def main():
         "calibrating": True,
     }
 
-    print(f"Session plan: {word_list}  ({args.samples} samples each, session={args.session})")
+    speaker = args.speaker.strip().lower()
+    print(f"Session plan: {word_list}  ({args.samples} samples each, "
+          f"session={args.session}, speaker={speaker})")
     saved_this_session = {}
     for word in word_list:
         before = next_sample_index(DATASET_DIR / word)
         result = record_word(cap, detector, predictor, word, args.samples, args.flip, calib,
-                             args.session)
+                             args.session, speaker)
         saved_this_session[word] = next_sample_index(DATASET_DIR / word) - before
         if result == "quit":
             break

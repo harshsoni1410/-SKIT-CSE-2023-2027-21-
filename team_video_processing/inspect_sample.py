@@ -44,6 +44,20 @@ def count_sessions(word_dir: Path) -> int:
     return len(tags)
 
 
+def count_speakers(word_dir: Path) -> int:
+    """How many different speakers (collect.py --speaker) a word has samples from.
+    Logs written before --speaker existed have no 5th column; those rows count as one
+    "untagged" speaker."""
+    log = word_dir / "session_log.csv"
+    if not log.exists():
+        return 0
+    with log.open(newline="", encoding="utf-8") as f:
+        rows = list(csv.reader(f))[1:]  # skip the header row
+    names = {(r[4] if len(r) > 4 and r[4] else "untagged")
+             for r in rows if len(r) > 1 and r[1] == "saved"}
+    return len(names)
+
+
 def files_by_session(word_dir: Path) -> dict[str, set[str]]:
     """session tag -> names of the .npy files saved in that session (from session_log.csv)."""
     log = word_dir / "session_log.csv"
@@ -65,7 +79,8 @@ def summarize_dataset() -> None:
     if not word_dirs:
         sys.exit(f"no .npy samples under {DATASET_DIR} - record some with collect.py first")
 
-    print(f"{'word':<8}{'samples':>8}{'dark':>6}{'static':>8}{'brightness':>12}{'motion':>8}{'sessions':>10}")
+    print(f"{'word':<8}{'samples':>8}{'dark':>6}{'static':>8}{'brightness':>12}{'motion':>8}"
+          f"{'sessions':>10}{'speakers':>10}")
     for d in word_dirs:
         brightness, motion = [], []
         dark = static = 0
@@ -78,7 +93,8 @@ def summarize_dataset() -> None:
             dark += b < MIN_BRIGHTNESS
             static += m < MIN_MOTION
         print(f"{d.name:<8}{len(brightness):>8}{dark:>6}{static:>8}"
-              f"{np.mean(brightness):>12.1f}{np.mean(motion):>8.2f}{count_sessions(d):>10}")
+              f"{np.mean(brightness):>12.1f}{np.mean(motion):>8.2f}{count_sessions(d):>10}"
+              f"{count_speakers(d):>10}")
 
 
 def montage(seq: np.ndarray, cols: int = 8) -> np.ndarray:
