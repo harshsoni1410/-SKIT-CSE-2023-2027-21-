@@ -15,6 +15,12 @@ in 21–26 Nov. This week's report was generated locally on Friday 27 Nov.
   unused import.
 - `docs/weekly/README.md`: documented `--date` / `--since` / `--remarks`, and what to
   do when the Thursday workflow does not run.
+- (Dhruv) `collect.py --speaker NAME` (required): the speaker is saved as a 5th column
+  in `session_log.csv`, and `inspect_sample.py --summary` has a new `speakers` column.
+  Prepares the dataset for other speakers, so the model can later be tested on someone
+  it never trained on. Existing logs still read fine (their samples count as one
+  "untagged" speaker). Tested on a copy of `bat/session_log.csv` and a new log; no
+  recording sitting was done this week.
 
 **Next:** unchanged. Record more sittings and other speakers, then retrain from scratch.
 
