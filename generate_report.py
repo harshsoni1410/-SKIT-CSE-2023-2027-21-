@@ -3,7 +3,6 @@ from collections import defaultdict
 import datetime
 import io
 import os
-import sys
 import html
 import matplotlib
 matplotlib.use("Agg")  # headless: no display on CI runners
@@ -87,8 +86,10 @@ def get_git_metrics(interval="weekly", report_date=None, since_override=None):
         git_args.append(f"--since={since_date} 00:00:00")
     if report_date:
         git_args.append(f"--until={report_date.strftime('%Y-%m-%d')} 23:59:59")
-        if interval != "final":
-            scope_title = f"{since_date} to {report_date.strftime('%Y-%m-%d')}"
+    # A custom window gets an explicit "from to to" title; otherwise the
+    # "Last N Days (Since ...)" title would show the default start date.
+    if interval != "final" and (since_override or report_date):
+        scope_title = f"{since_date} to {today.strftime('%Y-%m-%d')}"
 
     try:
         raw_output = subprocess.check_output(git_args, encoding='utf-8', errors='replace')
